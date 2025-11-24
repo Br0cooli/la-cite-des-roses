@@ -1,6 +1,20 @@
 ---
 import CountryLayout from "@layouts/CountryLayout.astro";
 
+interface CountryMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  capital?: string;
+  regionTag?: string;
+  emblem?: string;
+  summary?: string;
+  governmentType?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
 interface SocialClass {
   name: string;
   description?: string;
@@ -54,25 +68,34 @@ interface CultureData {
 
 interface Props {
   slug: string;
+  meta: CountryMeta;
   culture: CultureData | null;
 }
 
-const { slug, culture } = Astro.props as Props;
-
 export async function getStaticPaths() {
-  const modules = import.meta.glob("@data/lieux/pays/*/culture.json");
+  const metaModules = import.meta.glob("@data/lieux/pays/*/meta.json");
+  const cultureModules = import.meta.glob("@data/lieux/pays/*/culture.json");
 
   const entries = await Promise.all(
-    Object.entries(modules).map(async ([path, resolver]) => {
+    Object.entries(metaModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
-      const json = (mod?.default ?? mod) as CultureData;
+      const meta = (mod?.default ?? mod) as CountryMeta;
 
-      const match = path.match(/pays\/([^/]+)\/culture\.json$/);
+      const match = path.match(/pays\/([^/]+)\/meta\.json$/);
       const slug = match ? match[1] : "";
+
+      let culture: CultureData | null = null;
+      const cultureResolver: any =
+        cultureModules[path.replace("meta.json", "culture.json")];
+
+      if (cultureResolver) {
+        const cultureMod: any = await cultureResolver();
+        culture = (cultureMod?.default ?? cultureMod) as CultureData;
+      }
 
       return {
         params: { slug },
-        props: { slug, culture: json }
+        props: { slug, meta, culture }
       };
     })
   );
@@ -80,6 +103,7 @@ export async function getStaticPaths() {
   return entries;
 }
 
+const { slug, meta, culture } = Astro.props as Props;
 const basePath = `/univers/lieux/pays/${slug}`;
 
 const hasInteractive =
@@ -88,11 +112,19 @@ const hasInteractive =
   !!(culture?.subcultures && culture.subcultures.length > 0);
 ---
 
+---
+
 <CountryLayout
-  name="Culture & société"
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  capital={meta.capital}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
   basePath={basePath}
   currentSection="culture"
 >
+
   <section class="object-section">
     <h2 class="section-title">Culture & société</h2>
 

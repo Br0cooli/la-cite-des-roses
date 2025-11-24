@@ -1,0 +1,56 @@
+{
+  "nodes": [
+    {
+      "id": "delia",
+      "slug": "delia-de-vallenera",
+      "name": "Delia de Vallenera",
+      "role": "Princesse illégitime devenue reine",
+      "importance": "main"
+    },
+    {
+      "id": "leandre",
+      "slug": "leandre-pucci",
+      "name": "Léandre Pucci",
+      "role": "Garde royal & pénitent",
+      "importance": "main"
+    },
+    {
+      "id": "amaranthe",
+      "slug": "amaranthe-de-vallenera",
+      "name": "Amaranthe de Vallenera",
+      "role": "Reine d'Aureval",
+      "x": 0,
+      "y": -60,
+      "importance": "main"
+    },
+    {
+      "id": "alois",
+      "slug": "alois",
+      "name": "Aloïs",
+      "role": "Époux sacrifié & héritier",
+      "importance": "main"
+    }
+  ],
+  "links": [
+    {
+      "source": "amaranthe",
+      "target": "delia",
+      "type": "haine"
+    },
+    {
+      "source": "delia",
+      "target": "leandre",
+      "type": "passion_culpabilite"
+    },
+    {
+      "source": "delia",
+      "target": "alois",
+      "type": "contrat_sacrifice"
+    },
+    {
+      "source": "leandre",
+      "target": "alois",
+      "type": "rivalite_silencieuse"
+    }
+  ]
+}

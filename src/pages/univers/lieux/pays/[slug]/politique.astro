@@ -1,6 +1,20 @@
 ---
 import CountryLayout from "@layouts/CountryLayout.astro";
 
+interface CountryMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  capital?: string;
+  regionTag?: string;
+  emblem?: string;
+  summary?: string;
+  governmentType?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
 interface PowerStructure {
   description?: string;
   headOfState?: string;
@@ -65,25 +79,34 @@ interface PoliticsData {
 
 interface Props {
   slug: string;
+  meta: CountryMeta;
   politics: PoliticsData | null;
 }
 
-const { slug, politics } = Astro.props as Props;
-
 export async function getStaticPaths() {
-  const modules = import.meta.glob("@data/lieux/pays/*/politique.json");
+  const metaModules = import.meta.glob("@data/lieux/pays/*/meta.json");
+  const politicsModules = import.meta.glob("@data/lieux/pays/*/politique.json");
 
   const entries = await Promise.all(
-    Object.entries(modules).map(async ([path, resolver]) => {
+    Object.entries(metaModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
-      const json = (mod?.default ?? mod) as PoliticsData;
+      const meta = (mod?.default ?? mod) as CountryMeta;
 
-      const match = path.match(/pays\/([^/]+)\/politique\.json$/);
+      const match = path.match(/pays\/([^/]+)\/meta\.json$/);
       const slug = match ? match[1] : "";
+
+      let politics: PoliticsData | null = null;
+      const politicsResolver: any =
+        politicsModules[path.replace("meta.json", "politique.json")];
+
+      if (politicsResolver) {
+        const politicsMod: any = await politicsResolver();
+        politics = (politicsMod?.default ?? politicsMod) as PoliticsData;
+      }
 
       return {
         params: { slug },
-        props: { slug, politics: json }
+        props: { slug, meta, politics }
       };
     })
   );
@@ -91,17 +114,25 @@ export async function getStaticPaths() {
   return entries;
 }
 
+const { slug, meta, politics } = Astro.props as Props;
 const basePath = `/univers/lieux/pays/${slug}`;
 const hasMap =
   !!(politics?.keyInstitutions && politics.keyInstitutions.length > 0) ||
   !!(politics?.factions && politics.factions.length > 0);
 ---
 
+
 <CountryLayout
-  name="Politique & pouvoir"
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  capital={meta.capital}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
   basePath={basePath}
   currentSection="politique"
 >
+
   <section class="object-section">
     <h2 class="section-title">Politique & structures de pouvoir</h2>
 

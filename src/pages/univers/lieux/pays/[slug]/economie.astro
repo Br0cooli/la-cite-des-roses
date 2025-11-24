@@ -1,9 +1,23 @@
 ---
 import CountryLayout from "@layouts/CountryLayout.astro";
 
+interface CountryMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  capital?: string;
+  regionTag?: string;
+  emblem?: string;
+  summary?: string;
+  governmentType?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
 interface ResourceEntry {
   name: string;
-  type?: string;          // agricole, minérale, artisanale, symbolique...
+  type?: string;
   location?: string;
   description?: string;
   usage?: string;
@@ -11,15 +25,15 @@ interface ResourceEntry {
 
 interface ProductionSector {
   name: string;
-  type?: string;          // agriculture, commerce, artisanat, etc.
+  type?: string;
   description?: string;
-  workers?: string;       // qui y bosse
-  importance?: string;    // pourquoi c’est clé
+  workers?: string;
+  importance?: string;
 }
 
 interface TradePartner {
   name: string;
-  type?: string;          // cité, royaume, ligue marchande...
+  type?: string;
   goodsExported?: string;
   goodsImported?: string;
   balanceSummary?: string;
@@ -34,14 +48,14 @@ interface CurrencyInfo {
 
 interface EconomicActor {
   name: string;
-  type?: string;          // guilde, famille, banque, office royal...
+  type?: string;
   description?: string;
   influence?: string;
 }
 
 interface EconomicTension {
   name: string;
-  type?: string;          // social, fiscal, commercial...
+  type?: string;
   description?: string;
   stakes?: string;
 }
@@ -59,28 +73,34 @@ interface EconomyData {
 
 interface Props {
   slug: string;
+  meta: CountryMeta;
   economy: EconomyData | null;
 }
 
-const { slug, economy } = Astro.props as Props;
-
 export async function getStaticPaths() {
-  const modules = import.meta.glob("@data/lieux/pays/*/economie.json");
+  const metaModules = import.meta.glob("@data/lieux/pays/*/meta.json");
+  const ecoModules = import.meta.glob("@data/lieux/pays/*/economie.json");
 
   const entries = await Promise.all(
-    Object.entries(modules).map(async ([path, resolver]) => {
+    Object.entries(metaModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
-      const json = (mod?.default ?? mod) as EconomyData;
+      const meta = (mod?.default ?? mod) as CountryMeta;
 
-      const match = path.match(/pays\/([^/]+)\/economie\.json$/);
+      const match = path.match(/pays\/([^/]+)\/meta\.json$/);
       const slug = match ? match[1] : "";
+
+      let economy: EconomyData | null = null;
+      const ecoResolver: any =
+        ecoModules[path.replace("meta.json", "economie.json")];
+
+      if (ecoResolver) {
+        const ecoMod: any = await ecoResolver();
+        economy = (ecoMod?.default ?? ecoMod) as EconomyData;
+      }
 
       return {
         params: { slug },
-        props: {
-          slug,
-          economy: json
-        }
+        props: { slug, meta, economy }
       };
     })
   );
@@ -88,6 +108,7 @@ export async function getStaticPaths() {
   return entries;
 }
 
+const { slug, meta, economy } = Astro.props as Props;
 const basePath = `/univers/lieux/pays/${slug}`;
 const hasInteractive =
   !!(economy?.resources && economy.resources.length > 0) ||
@@ -96,10 +117,16 @@ const hasInteractive =
 ---
 
 <CountryLayout
-  name="Économie & ressources"
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  capital={meta.capital}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
   basePath={basePath}
   currentSection="economie"
 >
+
   <section class="object-section">
     <h2 class="section-title">Économie & ressources</h2>
 

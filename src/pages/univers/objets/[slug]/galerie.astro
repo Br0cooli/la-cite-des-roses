@@ -1,6 +1,16 @@
 ---
 import ObjectLayout from "@layouts/ObjectLayout.astro";
 
+interface MetaObjet {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  owner?: string;
+  origin?: string;
+  rarity?: string;
+  image?: string;
+}
+
 interface GalleryImage {
   src: string;
   alt?: string;
@@ -19,24 +29,44 @@ interface GalleryData {
 interface Props {
   slug: string;
   gallery: GalleryData | null;
+  meta: MetaObjet | null;
 }
 
-const { slug, gallery } = Astro.props as Props;
+const { slug, gallery, meta } = Astro.props as Props;
 
 export async function getStaticPaths() {
-  const modules = import.meta.glob("@data/objets/*/galerie.json");
+  // galerie.json pour chaque objet
+  const galleryModules = import.meta.glob("@data/objets/*/galerie.json");
+
+  // meta.json pour chaque objet (chargé eager pour faire une map)
+  const metaModules = import.meta.glob("@data/objets/*/meta.json", {
+    eager: true
+  });
+
+  const metaMap: Record<string, MetaObjet> = {};
+
+  for (const [path, mod] of Object.entries(metaModules)) {
+    const json = ((mod as any).default ?? mod) as MetaObjet;
+    const match = path.match(/objets\/([^/]+)\/meta\.json$/);
+    const slug = match ? match[1] : "";
+    if (slug) {
+      metaMap[slug] = json;
+    }
+  }
 
   const entries = await Promise.all(
-    Object.entries(modules).map(async ([path, resolver]) => {
+    Object.entries(galleryModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
       const json = (mod?.default ?? mod) as GalleryData;
 
       const match = path.match(/objets\/([^/]+)\/galerie\.json$/);
       const slug = match ? match[1] : "";
 
+      const meta = metaMap[slug] ?? null;
+
       return {
         params: { slug },
-        props: { slug, gallery: json }
+        props: { slug, gallery: json, meta }
       };
     })
   );
@@ -45,15 +75,26 @@ export async function getStaticPaths() {
 }
 
 const basePath = `/univers/objets/${slug}`;
+
+// Titre de page (le header affiche le vrai nom via meta)
+const pageTitle = meta?.name
+  ? `Galerie de ${meta.name}`
+  : "Galerie de l’objet";
 ---
 
 <ObjectLayout
-  name="Galerie visuelle"
+  name={meta?.name ?? "Objet sans nom"}
+  subtitle={meta?.subtitle}
+  typeLabel={meta?.typeLabel}
+  owner={meta?.owner}
+  origin={meta?.origin}
+  rarity={meta?.rarity}
+  image={meta?.image}
   basePath={basePath}
   currentSection="galerie"
 >
   <section class="object-section">
-    <h2 class="section-title">Galerie de l’objet</h2>
+    <h2 class="section-title">{pageTitle}</h2>
 
     {gallery?.featured && (
       <div class="object-gallery-featured">

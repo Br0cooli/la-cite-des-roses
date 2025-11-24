@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 
-interface Props {
+interface MetaObjet {
   name: string;
   subtitle?: string;
   typeLabel?: string;
@@ -9,39 +9,52 @@ interface Props {
   origin?: string;
   rarity?: string;
   image?: string;
-  basePath: string; // ex: "/univers/objets/mouchoir-leandre"
-  currentSection: string; // "general", "origine", etc.
-  children: AstroSlots["default"];
 }
 
-const {
-  name,
-  subtitle,
-  typeLabel,
-  owner,
-  origin,
-  rarity,
-  image,
-  basePath,
-  currentSection,
-} = Astro.props as Props;
+interface Props {
+  meta?: MetaObjet;
 
-// Nettoie le basePath pour éviter les doubles / à la fin
-const normalizedBasePath = (basePath || "").replace(/\/+$/, "");
+  name?: string;
+  subtitle?: string;
+  typeLabel?: string;
+  owner?: string;
+  origin?: string;
+  rarity?: string;
+  image?: string;
 
-// Sections de la nav latérale
+  basePath: string;       // ex: "/univers/objets/mouchoir-leandre"
+  currentSection: string; // "general", "origine", "fonctionnement", "owners", "galerie"
+}
+
+const props = Astro.props as Props;
+
+const normalizedBasePath = (props.basePath || "").replace(/\/+$/, "");
+
+// on merge : props.directs > meta.json > vide
+const name = props.name ?? props.meta?.name ?? "";
+const subtitle = props.subtitle ?? props.meta?.subtitle;
+const typeLabel = props.typeLabel ?? props.meta?.typeLabel;
+const owner = props.owner ?? props.meta?.owner;
+const origin = props.origin ?? props.meta?.origin;
+const rarity = props.rarity ?? props.meta?.rarity;
+const image = props.image ?? props.meta?.image;
+
+const currentSection = props.currentSection;
+
 const sections = [
-  { id: "general", label: "Général" },
-  { id: "origine", label: "Origine & fabrication" },
+  { id: "general",        label: "Général" },
+  { id: "origine",        label: "Origine & fabrication" },
   { id: "fonctionnement", label: "Fonctionnement" },
-  { id: "owners", label: "Possesseurs" },
-  { id: "galerie", label: "Galerie" },
+  { id: "owners",         label: "Possesseurs" },
+  { id: "galerie",        label: "Galerie" },
 ];
 ---
 
+
 <BaseLayout title={name ? `${name} — Objet` : "Objet"}>
-  <div class="card">
-    {/* HEADER OBJET */}
+  <section class="card object-page">
+
+    <!-- HEADER OBJET COMMUN À TOUTES LES PAGES -->
     <header class="object-header">
       <div class="object-header-text">
         {typeLabel && (
@@ -86,7 +99,7 @@ const sections = [
       )}
     </header>
 
-    {/* LAYOUT : SIDEBAR + CONTENU */}
+    <!-- LAYOUT : NAV LATÉRALE + CONTENU -->
     <div class="object-layout">
       <aside class="object-sidebar">
         <nav class="object-nav">
@@ -108,5 +121,5 @@ const sections = [
         <slot />
       </div>
     </div>
-  </div>
+  </section>
 </BaseLayout>

@@ -33,7 +33,6 @@ const currentPath = Astro.url.pathname;
           <span class="logo-mark">✶</span>
           <div class="logo-texts">
             <span class="logo-title">La Cité des Roses</span>
-            <span class="logo-subtitle">Chroniques d’un royaume fissuré</span>
           </div>
         </a>
 
@@ -44,6 +43,7 @@ const currentPath = Astro.url.pathname;
           >
             Accueil
           </a>
+
           <a
             href="/personnages"
             aria-current={
@@ -52,6 +52,7 @@ const currentPath = Astro.url.pathname;
           >
             Personnages
           </a>
+
           <a
             href="/univers"
             aria-current={
@@ -60,6 +61,16 @@ const currentPath = Astro.url.pathname;
           >
             Univers
           </a>
+
+          <a
+            href="/scenario"
+            aria-current={
+              currentPath.startsWith("/univers/scenario") ? "page" : undefined
+            }
+          >
+            Scénario
+          </a>
+
           <a
             href="/chronologie"
             aria-current={
@@ -69,6 +80,7 @@ const currentPath = Astro.url.pathname;
             Chronologie
           </a>
         </nav>
+
       </div>
     </header>
 

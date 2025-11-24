@@ -1,5 +1,8 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import BaseLayout from "@layouts/BaseLayout.astro";
+import RelationsGraph from "../../components/RelationsGraph.astro";
+
+
 
 // 🚨 LOG DE DEBUG POUR VOIR CE QUE ASTRO VOIT
 console.log("SEARCH:", import.meta.glob("../../data/personnages/*/meta.json"));
@@ -74,6 +77,24 @@ for (const c of characters) {
 ---
 
 <BaseLayout title="Personnages — La Cité des Roses">
+    <section class="card">
+      <header class="page-header">
+        <div class="page-header-main">
+          <h1 class="page-title">Graphique des relations</h1>
+          <p class="page-subtitle">
+            Galerie des personnages principaux et secondaires de l’univers.
+          </p>
+        </div>
+      </header>
+
+      <div class="relations-full">
+        <RelationsGraph />
+      </div>
+
+    </section>
+      </div>
+    </div>
+  </section>
   <section class="card">
     <h1 class="page-title">Personnages</h1>
     <p class="page-subtitle">

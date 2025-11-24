@@ -1,6 +1,16 @@
 ---
 import ObjectLayout from "@layouts/ObjectLayout.astro";
 
+interface MetaObjet {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  owner?: string;
+  origin?: string;
+  rarity?: string;
+  image?: string;
+}
+
 interface OwnerTimelineEntry {
   name: string;
   role?: string;
@@ -29,24 +39,48 @@ interface PossesseursData {
 interface Props {
   slug: string;
   possesseurs: PossesseursData | null;
+  meta: MetaObjet | null;
 }
 
-const { slug, possesseurs } = Astro.props as Props;
+const { slug, possesseurs, meta } = Astro.props as Props;
 
 export async function getStaticPaths() {
-  const modules = import.meta.glob("@data/objets/*/owners.json");
+  // owners.json pour chaque objet
+  const ownersModules = import.meta.glob("@data/objets/*/owners.json");
+
+  // meta.json pour chaque objet (chargé eager)
+  const metaModules = import.meta.glob("@data/objets/*/meta.json", {
+    eager: true
+  });
+
+  const metaMap: Record<string, MetaObjet> = {};
+
+  for (const [path, mod] of Object.entries(metaModules)) {
+    const json = ((mod as any).default ?? mod) as MetaObjet;
+    const match = path.match(/objets\/([^/]+)\/meta\.json$/);
+    const slug = match ? match[1] : "";
+    if (slug) {
+      metaMap[slug] = json;
+    }
+  }
 
   const entries = await Promise.all(
-    Object.entries(modules).map(async ([path, resolver]) => {
+    Object.entries(ownersModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
       const json = (mod?.default ?? mod) as PossesseursData;
 
       const match = path.match(/objets\/([^/]+)\/owners\.json$/);
       const slug = match ? match[1] : "";
 
+      const meta = metaMap[slug] ?? null;
+
       return {
         params: { slug },
-        props: { slug, possesseurs: json }
+        props: {
+          slug,
+          possesseurs: json,
+          meta
+        }
       };
     })
   );
@@ -58,7 +92,13 @@ const basePath = `/univers/objets/${slug}`;
 ---
 
 <ObjectLayout
-  name="Possesseurs"
+  name={meta?.name ?? "Objet"}
+  subtitle={meta?.subtitle}
+  typeLabel={meta?.typeLabel}
+  owner={meta?.owner}
+  origin={meta?.origin}
+  rarity={meta?.rarity}
+  image={meta?.image}
   basePath={basePath}
   currentSection="owners"
 >
@@ -71,8 +111,8 @@ const basePath = `/univers/objets/${slug}`;
 
     {!possesseurs && (
       <p class="object-empty">
-        Aucun fichier <code>possesseurs.json</code> trouvé.<br />
-        Chemin attendu : <code>src/data/objets/{slug}/possesseurs.json</code>.
+        Aucun fichier <code>owners.json</code> trouvé.<br />
+        Chemin attendu : <code>src/data/objets/{slug}/owners.json</code>.
       </p>
     )}
 

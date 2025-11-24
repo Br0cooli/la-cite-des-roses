@@ -2,47 +2,120 @@
 import BaseLayout from "@layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="La Cité des Roses">
+<BaseLayout title="La Cité des Roses — Portail de l'univers">
   <section class="card">
-    <h1 class="page-title">La Cité des Roses</h1>
-    <p class="page-subtitle">
-      Royaume baigné de lumière crème et d’or terni, où les couronnes sont
-      lourdes, les serments fragiles, et les histoires bien trop humaines.
-    </p>
+    <header class="page-header">
+      <div class="page-header-main">
+        <h1 class="page-title">La Cité des Roses</h1>
+        <p class="page-subtitle">
+          Encyclopédie de l’univers de Delia, Léandre & Aloïs&nbsp;: personnages, royaumes,
+          objets et drame royal en surchauffe.
+        </p>
+        <p class="page-intro">
+          Ce site rassemble tout le lore de ton monde&nbsp;:
+          fiches détaillées, cartes, chronologie, dynamique du triangle amoureux
+          et documents de travail de ton scénario.
+        </p>
+      </div>
+    </header>
 
     <div class="home-grid">
-      <article class="home-block">
-        <h2>Explorer l’univers</h2>
+      <!-- Bloc Univers -->
+      <a href="/univers/lieux/" class="home-block">
+        <h2>Lieux</h2>
         <p>
-          Découvre la géographie du royaume, ses quartiers, ses palais, ses maisons
-          nobles et les objets qui portent les secrets de la cité.
+          Découvre Aureval, ses régions, ses villes, ses cartes et la géographie politique
+          qui encadre l’histoire.
         </p>
-        <a class="btn-primary" href="/univers">
-          Voir l’univers
-        </a>
-      </article>
+        <ul class="home-list">
+          <li>Fiches pays (Aureval, voisins...)</li>
+          <li>Capitales, empires, ports et villages</li>
+          <li>Cartes interactives & points d’intérêt</li>
+        </ul>
+      </a>
 
-      <article class="home-block">
-        <h2>Rencontrer les personnages</h2>
+      <!-- Bloc Personnages -->
+      <a href="/personnages" class="home-block">
+        <h2>Personnages</h2>
         <p>
-          Princes illégitimes, reines ébréchées, chevaliers trop loyaux. Feuillette
-          leurs fiches, leurs arcs, et leurs blessures bien rangées.
+          La galerie complète des protagonistes, antagonistes, alliés et pièces maîtresses
+          du drame royal.
         </p>
-        <a class="btn-primary" href="/personnages">
-          Accéder aux personnages
-        </a>
-      </article>
+        <ul class="home-list">
+          <li>Fiches complètes (général, stats, passé…)</li>
+          <li>Relations & dynamiques du triangle amoureux</li>
+          <li>Moodboards, interviews & inventaires</li>
+        </ul>
+      </a>
 
-      <article class="home-block">
-        <h2>Suivre la chronologie</h2>
+      <!-- Bloc Objets -->
+      <a href="/univers/objets" class="home-block">
+        <h2>Objets</h2>
         <p>
-          Suis les grands événements et les intrigues secondaires sur une frise
-          commune, pour ne plus jamais te perdre dans les drames politiques.
+          Reliques, lettres, bijoux et artefacts qui portent la mémoire des personnages
+          et font avancer l’intrigue.
         </p>
-        <a class="btn-primary" href="/chronologie">
-          Ouvrir la timeline
-        </a>
-      </article>
+        <ul class="home-list">
+          <li>Fiches d’objets story-relevants</li>
+          <li>Symbolique, charge émotionnelle</li>
+          <li>Moments clés où l’objet apparaît</li>
+        </ul>
+      </a>
+
+      <!-- Bloc Scénario -->
+      <a href="/scenario" class="home-block">
+        <h2>Scénario</h2>
+        <p>
+          Vue d’ensemble de l’histoire&nbsp;: triangle amoureux, arcs, enjeux, thèmes
+          et structure en actes.
+        </p>
+        <ul class="home-list">
+          <li>Dynamique du triangle Delia · Aloïs · Léandre</li>
+          <li>Arcs individuels & trajectoires émotionnelles</li>
+          <li>Structure de l’intrigue & grands événements</li>
+        </ul>
+      </a>
     </div>
+    <script>
+      // détecte si le dernier block est seul sur sa ligne, et le rend "wide"
+      (function () {
+        function updateHomeGrid() {
+          var grid = document.querySelector(".home-grid");
+          if (!grid) return;
+
+          var items = Array.prototype.slice.call(grid.children);
+          // on nettoie d'abord
+          items.forEach(function (el) {
+            el.classList.remove("home-block--wide");
+          });
+
+          if (items.length === 0) return;
+
+          var last = items[items.length - 1];
+          var beforeLast = items[items.length - 2];
+
+          // cas où il n'y a QU'UN seul block au total
+          if (!beforeLast) {
+            last.classList.add("home-block--wide");
+            return;
+          }
+
+          // si le dernier est sur une ligne différente du précédent
+          var lastTop = last.offsetTop;
+          var prevTop = beforeLast.offsetTop;
+
+          if (lastTop !== prevTop) {
+            last.classList.add("home-block--wide");
+          }
+        }
+
+        // appel au chargement + au resize
+        window.addEventListener("load", updateHomeGrid);
+        window.addEventListener("resize", function () {
+          clearTimeout(window.__homeGridTimeout);
+          window.__homeGridTimeout = setTimeout(updateHomeGrid, 100);
+        });
+      })();
+    </script>
   </section>
 </BaseLayout>

@@ -1,6 +1,20 @@
 ---
 import CountryLayout from "@layouts/CountryLayout.astro";
 
+interface CountryMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  capital?: string;
+  regionTag?: string;
+  emblem?: string;
+  summary?: string;
+  governmentType?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
 interface ClimateEntry {
   name: string;
   area?: string;
@@ -55,25 +69,34 @@ interface GeographyData {
 
 interface Props {
   slug: string;
+  meta: CountryMeta;
   geo: GeographyData | null;
 }
 
-const { slug, geo } = Astro.props as Props;
-
 export async function getStaticPaths() {
-  const modules = import.meta.glob("@data/lieux/pays/*/geographie.json");
+  const metaModules = import.meta.glob("@data/lieux/pays/*/meta.json");
+  const geoModules = import.meta.glob("@data/lieux/pays/*/geographie.json");
 
   const entries = await Promise.all(
-    Object.entries(modules).map(async ([path, resolver]) => {
+    Object.entries(metaModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
-      const json = (mod?.default ?? mod) as GeographyData;
+      const meta = (mod?.default ?? mod) as CountryMeta;
 
-      const match = path.match(/pays\/([^/]+)\/geographie\.json$/);
+      const match = path.match(/pays\/([^/]+)\/meta\.json$/);
       const slug = match ? match[1] : "";
+
+      let geo: GeographyData | null = null;
+      const geoResolver: any =
+        geoModules[path.replace("meta.json", "geographie.json")];
+
+      if (geoResolver) {
+        const geoMod: any = await geoResolver();
+        geo = (geoMod?.default ?? geoMod) as GeographyData;
+      }
 
       return {
         params: { slug },
-        props: { slug, geo: json }
+        props: { slug, meta, geo }
       };
     })
   );
@@ -81,14 +104,21 @@ export async function getStaticPaths() {
   return entries;
 }
 
+const { slug, meta, geo } = Astro.props as Props;
 const basePath = `/univers/lieux/pays/${slug}`;
 const hasMap =
   !!(geo?.regionPins && geo.regionPins.length > 0) ||
   !!(geo?.terrainZones && geo.terrainZones.length > 0);
 ---
 
+
 <CountryLayout
-  name="Géographie"
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  capital={meta.capital}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
   basePath={basePath}
   currentSection="geographie"
 >

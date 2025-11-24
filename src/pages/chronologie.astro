@@ -64,11 +64,18 @@ const years = Array.from(new Set(events.map((e) => e.annee))).sort(
 
                   <div class="chronology-events">
                     {evts.map((evt) => (
-                      <article class="chronology-event">
+                      <article
+                        class="chronology-event"
+                        data-title={evt.titre}
+                        data-description={evt.detail || evt.description}
+                        data-year={evt.annee}
+                        data-plot={plot.label}
+                      >
                         <h3>{evt.titre}</h3>
                         <p>{evt.description}</p>
                       </article>
                     ))}
+
                   </div>
                 </div>
               );
@@ -77,10 +84,113 @@ const years = Array.from(new Set(events.map((e) => e.annee))).sort(
         ))}
       </div>
     </div>
+        <div
+      class="chronology-lightbox"
+      id="chronology-lightbox"
+      aria-hidden="true"
+    >
+      <div
+        class="chronology-lightbox-backdrop"
+        data-chronology-close
+      ></div>
+
+      <div class="chronology-lightbox-content" role="dialog" aria-modal="true">
+        <button
+          class="chronology-lightbox-close"
+          type="button"
+          data-chronology-close
+          aria-label="Fermer"
+        >
+          ×
+        </button>
+
+        <div class="chronology-lightbox-body">
+          <p
+            class="chronology-lightbox-meta"
+            id="chronology-lightbox-meta"
+          ></p>
+          <h2
+            class="chronology-lightbox-title"
+            id="chronology-lightbox-title"
+          ></h2>
+          <p
+            class="chronology-lightbox-desc"
+            id="chronology-lightbox-desc"
+          ></p>
+        </div>
+      </div>
+    </div>
 
     <p class="page-subtitle" style="margin-top:1.5rem;">
       Les points indiquent où chaque fil narratif est actif. Même ligne =
       événements simultanés, colonnes différentes = plots parallèles.
     </p>
   </section>
+      <script>
+      if (typeof window !== "undefined") {
+        const lightbox = document.getElementById("chronology-lightbox");
+        const metaEl = document.getElementById("chronology-lightbox-meta");
+        const titleEl = document.getElementById("chronology-lightbox-title");
+        const descEl = document.getElementById("chronology-lightbox-desc");
+
+        function openChronologyLightbox(card) {
+          if (!lightbox || !card) return;
+
+          const title = card.dataset.title || "";
+          const description = card.dataset.description || "";
+          const year = card.dataset.year || "";
+          const plot = card.dataset.plot || "";
+
+          if (metaEl) {
+            if (year && plot) {
+              metaEl.textContent = `Année ${year} · ${plot}`;
+            } else if (year) {
+              metaEl.textContent = `Année ${year}`;
+            } else {
+              metaEl.textContent = plot;
+            }
+          }
+
+          if (titleEl) titleEl.textContent = title;
+          if (descEl) descEl.textContent = description;
+
+          lightbox.classList.add("is-open");
+          document.body.classList.add("chronology-modal-open");
+        }
+
+        function closeChronologyLightbox() {
+          if (!lightbox) return;
+          lightbox.classList.remove("is-open");
+          document.body.classList.remove("chronology-modal-open");
+        }
+
+        // ouverture au clic sur une carte
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+
+          const card = target.closest(".chronology-event");
+          if (card) {
+            openChronologyLightbox(card);
+          }
+        });
+
+        // boutons et backdrop de fermeture
+        if (lightbox) {
+          const closers = lightbox.querySelectorAll("[data-chronology-close]");
+          closers.forEach((el) => {
+            el.addEventListener("click", () => {
+              closeChronologyLightbox();
+            });
+          });
+        }
+
+        // Esc pour fermer
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeChronologyLightbox();
+          }
+        });
+      }
+    </script>
 </BaseLayout>

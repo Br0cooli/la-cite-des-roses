@@ -1,0 +1,361 @@
+---
+import relations from "../data/personnages/relations.json";
+
+interface RelationNode {
+  id: string;
+  slug: string;
+  name: string;
+  role?: string;
+  x?: number;
+  y?: number;
+  importance?: "main" | "normal";
+}
+
+interface RelationLink {
+  source: string;
+  target: string;
+  type?: string;
+}
+
+const nodes = relations.nodes as RelationNode[];
+const links = relations.links as RelationLink[];
+
+// viewBox centré sur [-140..140] x [-120..120]
+const viewBox = "-140 -120 280 240";
+---
+
+<div class="relations-graph-shell">
+  <div class="relations-canvas" id="relations-graph" data-zoom="1">
+    <div class="relations-tooltip" id="relations-tooltip" hidden></div>
+
+    <div class="relations-inner">
+      <svg class="relations-svg" viewBox={viewBox}>
+        <defs>
+          <!-- Dégradé pour les lignes de relation -->
+          <linearGradient id="rel-line" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#E9D0AA" />
+            <stop offset="50%" stop-color="#EDC7D3" />
+            <stop offset="100%" stop-color="#D8C9EF" />
+          </linearGradient>
+
+          <!-- masque rond pour les portraits -->
+          <clipPath id="rel-portrait-mask">
+            <circle cx="0" cy="0" r="14" />
+          </clipPath>
+        </defs>
+
+        <!-- Liens -->
+        {links.map((link) => (
+          <line
+            class={
+              "rel-link" +
+              (link.type && link.type.includes("rivalite") ? " rel-link-secondary" : "")
+            }
+            data-source={link.source}
+            data-target={link.target}
+            data-type={link.type || ""}
+          />
+        ))}
+
+        <!-- Nœuds -->
+        {nodes.map((node) => (
+          <g
+            class={
+              "rel-node" +
+              (node.importance === "main" ? " rel-node-main" : "")
+            }
+            data-id={node.id}
+            data-slug={node.slug}
+            data-name={node.name}
+            data-role={node.role}
+            data-init-x={node.x ?? 0}
+            data-init-y={node.y ?? 0}
+          >
+            <circle
+              class="rel-node-dot"
+              cx="0"
+              cy="0"
+              r={node.importance === "main" ? 5 : 4}
+            />
+            <image
+              href={"/personnages/" + node.slug + "/portrait.png"}
+              x="-14" y="-14"
+              width="28" height="28"
+              clip-path="url(#rel-portrait-mask)"
+              class="rel-node-portrait"
+            />
+          </g>
+        ))}
+      </svg>
+    </div>
+  </div>
+
+  <div class="relations-zoom-ui">
+    <button type="button" data-zoom-btn="out">−</button>
+    <span id="relations-zoom-value">100%</span>
+    <button type="button" data-zoom-btn="in">+</button>
+  </div>
+
+  <script>
+    if (typeof window !== "undefined") {
+      const container = document.getElementById("relations-graph");
+      const inner = container.querySelector(".relations-inner");
+      const svg = container.querySelector("svg");
+      const tooltip = document.getElementById("relations-tooltip");
+      const zoomValueEl = document.getElementById("relations-zoom-value");
+
+      let scale = 1;
+      let offsetX = 0;
+      let offsetY = 0;
+      let dragging = false;
+      let lastX = 0;
+      let lastY = 0;
+
+      const minScale = 0.25;
+      const maxScale = 4.5;
+      const portraitsThreshold = 1.6;
+
+      function applyTransform() {
+        inner.style.transform =
+          "translate(-50%, -50%) translate(" +
+          offsetX + "px, " + offsetY +
+          "px) scale(" + scale + ")";
+
+        container.dataset.zoom = scale.toFixed(2);
+        container.dataset.showPortraits = scale >= portraitsThreshold ? "true" : "false";
+        zoomValueEl.textContent = Math.round(scale * 100) + "%";
+      }
+
+      function changeZoom(delta, x, y) {
+        const prev = scale;
+        scale = Math.max(minScale, Math.min(maxScale, scale + delta));
+
+        if (x !== undefined && y !== undefined) {
+          const rect = container.getBoundingClientRect();
+          const cx = x - rect.left - rect.width / 2;
+          const cy = y - rect.top - rect.height / 2;
+          const factor = scale / prev;
+          offsetX = offsetX * factor + cx * (1 - factor);
+          offsetY = offsetY * factor + cy * (1 - factor);
+        }
+
+        applyTransform();
+      }
+
+      container.addEventListener("wheel", function (e) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.18 : -0.18;
+        changeZoom(delta, e.clientX, e.clientY);
+      }, { passive: false });
+
+      const zoomBtns = container.parentElement.querySelectorAll("[data-zoom-btn]");
+      zoomBtns.forEach(btn => {
+        btn.addEventListener("click", function () {
+          const dir = btn.getAttribute("data-zoom-btn");
+          const rect = container.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          changeZoom(dir === "in" ? 0.2 : -0.2, cx, cy);
+        });
+      });
+
+      container.addEventListener("mousedown", function (e) {
+        if (e.button !== 0) return;
+        dragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        container.classList.add("is-dragging");
+      });
+
+      window.addEventListener("mousemove", function (e) {
+        if (!dragging) return;
+        offsetX += e.clientX - lastX;
+        offsetY += e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        applyTransform();
+      });
+
+      window.addEventListener("mouseup", function () {
+        dragging = false;
+        container.classList.remove("is-dragging");
+      });
+
+      /* ========= FORCE LAYOUT ========= */
+
+      const nodeEls = Array.from(svg.querySelectorAll(".rel-node"));
+      const linkEls = Array.from(svg.querySelectorAll(".rel-link"));
+
+      const nodeData = nodeEls.map(el => {
+        const ix = parseFloat(el.getAttribute("data-init-x") || "0");
+        const iy = parseFloat(el.getAttribute("data-init-y") || "0");
+
+        return {
+          id: el.getAttribute("data-id"),
+          el,
+          x: ix + (Math.random() - 0.5) * 10,
+          y: iy + (Math.random() - 0.5) * 10,
+          vx: 0,
+          vy: 0
+        };
+      });
+
+      const nodeById = new Map(nodeData.map(n => [n.id, n]));
+
+      const linkData = linkEls
+        .map(el => {
+          const s = nodeById.get(el.getAttribute("data-source"));
+          const t = nodeById.get(el.getAttribute("data-target"));
+          return s && t ? { el, source: s, target: t } : null;
+        })
+        .filter(Boolean);
+
+      function simulateStep() {
+        const repulsion = 8000;
+        const spring = 0.015;
+        const rest = 80;
+        const damping = 0.9;
+
+        for (let i = 0; i < nodeData.length; i++) {
+          for (let j = i + 1; j < nodeData.length; j++) {
+            const a = nodeData[i];
+            const b = nodeData[j];
+
+            let dx = b.x - a.x;
+            let dy = b.y - a.y;
+            let dist2 = dx * dx + dy * dy || 0.01;
+            let dist = Math.sqrt(dist2);
+
+            const f = repulsion / dist2;
+            const fx = f * dx / dist;
+            const fy = f * dy / dist;
+
+            a.vx -= fx; a.vy -= fy;
+            b.vx += fx; b.vy += fy;
+          }
+        }
+
+        linkData.forEach(link => {
+          const a = link.source;
+          const b = link.target;
+
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const diff = d - rest;
+          const f = spring * diff;
+          const fx = f * dx / d;
+          const fy = f * dy / d;
+
+          a.vx += fx; a.vy += fy;
+          b.vx -= fx; b.vy -= fy;
+        });
+
+        nodeData.forEach(n => {
+          n.vx *= damping;
+          n.vy *= damping;
+          n.x += n.vx * 0.04;
+          n.y += n.vy * 0.04;
+
+          n.x = Math.max(-130, Math.min(130, n.x));
+          n.y = Math.max(-110, Math.min(110, n.y));
+
+          n.el.setAttribute("transform", "translate(" + n.x + ", " + n.y + ")");
+        });
+
+        linkData.forEach(link => {
+          link.el.setAttribute("x1", link.source.x);
+          link.el.setAttribute("y1", link.source.y);
+          link.el.setAttribute("x2", link.target.x);
+          link.el.setAttribute("y2", link.target.y);
+        });
+      }
+
+      function tick() {
+        simulateStep();
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      /* ========= TOOLTIP NŒUDS + LIENS ========= */
+
+      function getRelationLabel(type) {
+        if (!type) return "Relation";
+        return type.replace(/_/g, " ");
+      }
+
+      function showTooltip(html, evt) {
+        tooltip.innerHTML = html;
+        tooltip.hidden = false;
+        const rect = container.getBoundingClientRect();
+        tooltip.style.left = (evt.clientX - rect.left + 10) + "px";
+        tooltip.style.top = (evt.clientY - rect.top + 10) + "px";
+      }
+
+      function hideTooltip() {
+        tooltip.hidden = true;
+      }
+
+      /* NŒUDS */
+      nodeEls.forEach(nodeEl => {
+        nodeEl.addEventListener("mouseenter", e => {
+          const name = nodeEl.getAttribute("data-name") || "";
+          const role = nodeEl.getAttribute("data-role") || "";
+
+          container.classList.add("has-active-node");
+          nodeEls.forEach(n => n.classList.remove("is-active"));
+          nodeEl.classList.add("is-active");
+
+          showTooltip("<strong>" + name + "</strong><br/><span>" + role + "</span>", e);
+        });
+
+        nodeEl.addEventListener("mousemove", e => {
+          const rect = container.getBoundingClientRect();
+          tooltip.style.left = (e.clientX - rect.left + 10) + "px";
+          tooltip.style.top = (e.clientY - rect.top + 10) + "px";
+        });
+
+        nodeEl.addEventListener("mouseleave", () => {
+          container.classList.remove("has-active-node");
+          nodeEls.forEach(n => n.classList.remove("is-active"));
+          hideTooltip();
+        });
+      });
+
+      /* LIENS */
+      linkEls.forEach(linkEl => {
+        linkEl.addEventListener("mouseenter", e => {
+          const source = nodeById.get(linkEl.getAttribute("data-source"));
+          const target = nodeById.get(linkEl.getAttribute("data-target"));
+          const type = linkEl.getAttribute("data-type");
+
+          const label = getRelationLabel(type);
+          const title =
+            (source ? source.el.getAttribute("data-name") : "") +
+            " ↔ " +
+            (target ? target.el.getAttribute("data-name") : "");
+
+          container.classList.add("has-active-link");
+          linkEls.forEach(l => l.classList.remove("is-active"));
+          linkEl.classList.add("is-active");
+
+          showTooltip("<strong>" + title + "</strong><br/><span>" + label + "</span>", e);
+        });
+
+        linkEl.addEventListener("mousemove", e => {
+          const rect = container.getBoundingClientRect();
+          tooltip.style.left = (e.clientX - rect.left + 10) + "px";
+          tooltip.style.top = (e.clientY - rect.top + 10) + "px";
+        });
+
+        linkEl.addEventListener("mouseleave", () => {
+          container.classList.remove("has-active-link");
+          linkEls.forEach(l => l.classList.remove("is-active"));
+          hideTooltip();
+        });
+      });
+
+      applyTransform();
+    }
+  </script>
+</div>

@@ -35,7 +35,9 @@ const basePath = `/personnages/${slug}`;
 // ROUTE DYNAMIQUE : /personnages/[slug]/timeline
 export async function getStaticPaths() {
   const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
-  const timelineModules = import.meta.glob("../../../data/personnages/*/timeline.json");
+  const timelineModules = import.meta.glob(
+    "../../../data/personnages/*/timeline.json"
+  );
 
   const timelineMap: Record<string, TimelineData> = {};
 
@@ -82,69 +84,58 @@ export async function getStaticPaths() {
   currentSection="timeline"
 >
   <section class="card">
-    <h3 class="page-title" style="margin-left:0;">Chronologie</h3>
-    <p class="page-subtitle" style="margin-left:0;">
-      Déroulé des moments décisifs de la vie de {meta.name}&nbsp;: ce qui le ou
-      la façonne avant et pendant l’histoire principale.
-    </p>
+    <header class="page-header">
+      <h3 class="page-title" style="margin-left:0;">Chronologie</h3>
+      <p class="page-subtitle" style="margin-left:0;">
+        Moments décisifs de la vie de {meta.name} : les bascules qui le ou la
+        façonnent avant et pendant l’histoire principale.
+      </p>
+    </header>
 
     {timeline && timeline.events && timeline.events.length > 0 ? (
-      <div class="chronology-layout timeline-personnage">
-        <div class="chronology-grid">
-          <section class="chronology-column">
-            <header class="chronology-header">
-              <h2 class="chronology-column-title">
-                Parcours de {meta.name}
-              </h2>
-              <p class="chronology-column-subtitle">
-                Les événements sont listés du plus ancien au plus récent. Les
-                points marquent les bascules importantes dans son histoire.
-              </p>
-            </header>
+      <div class="char-timeline">
+        <div class="char-timeline-rail"></div>
 
-            <div class="chronology-body">
-              {timeline.events.map((evt) => (
-                <div class="chronology-row">
-                  <div class="chronology-cell">
-                    {/* Rail vertical + point */}
-                    <div class="chronology-timeline-rail">
-                      <div class="chronology-timeline-dot"></div>
-                    </div>
+        <ul class="char-timeline-list">
+          {timeline.events.map((evt) => (
+            <li class="char-timeline-item">
+              <div class="char-timeline-meta">
+                {evt.period && (
+                  <span class="chronology-tag">
+                    {evt.period}
+                  </span>
+                )}
+                {evt.when && (
+                  <span class="chronology-when">
+                    {evt.when}
+                  </span>
+                )}
+              </div>
 
-                    {/* Carte d’événement */}
-                    <article class="chronology-card">
-                      <header class="chronology-card-header">
-                        <div class="chronology-card-meta">
-                          {evt.period && (
-                            <span class="chronology-tag">
-                              {evt.period}
-                            </span>
-                          )}
-                          {evt.when && (
-                            <span class="chronology-when">
-                              {evt.when}
-                            </span>
-                          )}
-                        </div>
-                        <h3 class="chronology-title">{evt.label}</h3>
-                      </header>
-
-                      <p class="chronology-desc">
-                        {evt.description}
-                      </p>
-                    </article>
-                  </div>
+              <div class="char-timeline-row">
+                <div class="char-timeline-dot-col">
+                  <div class="char-timeline-dot"></div>
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
+
+                <article class="char-timeline-card">
+                  <h3 class="char-timeline-title">
+                    {evt.label}
+                  </h3>
+                  <p class="char-timeline-desc">
+                    {evt.description}
+                  </p>
+                </article>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     ) : (
       <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
         Aucune chronologie n’a encore été définie pour ce personnage. Tu peux
         créer un fichier
-        <code>src/data/personnages/{slug}/timeline.json</code> pour activer cette page.
+        <code>src/data/personnages/{slug}/timeline.json</code> pour activer
+        cette page.
       </p>
     )}
   </section>
