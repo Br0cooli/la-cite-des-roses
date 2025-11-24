@@ -1,124 +1,35 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 
-// On charge tous les JSON de lieux : src/data/lieux/*.json
-const modules = import.meta.glob("../../data/lieux/*.json", {
-  eager: true
-});
-
-interface LieuMeta {
-  name: string;
-  subtitle?: string;
-  typeLabel?: string;  // Palais, Quartier, Ville...
-  region?: string;     // Région / zone / royaume
-  tag?: string;        // Petit label d'ambiance
-  image?: string;      // Visuel principal
-  [key: string]: any;
+// Route dynamique = Astro exige un getStaticPaths,
+// même si pour l'instant on ne génère aucune page concrète.
+export async function getStaticPaths() {
+  // Quand tu auras une vraie logique de pays, on remplira ça.
+  return [];
 }
 
-function getRegionName(region?: string) {
-  if (!region || region.trim() === "") return "Autres lieux";
-  return region;
-}
+// On récupère le slug au cas où plus tard tu veuilles l'utiliser
+const { slug } = Astro.params;
 
-const places = Object.entries(modules)
-  .map(([path, mod]) => {
-    const data = (mod as any).default as LieuMeta;
-
-    // extrait le slug depuis le chemin: data/lieux/palais-aureval.json
-    const match = path.match(/lieux\/([^/]+)\.json$/);
-    const slug = match ? match[1] : "";
-
-    if (!slug) return null;
-
-    const name = data.name || slug;
-    const region = getRegionName(data.region);
-    const image =
-      data.image || `/lieux/${slug}/visuel.png`;
-
-    return {
-      slug,
-      name,
-      subtitle: data.subtitle || "",
-      typeLabel: data.typeLabel || "",
-      region,
-      tag: data.tag || "",
-      image
-    };
-  })
-  .filter((p) => p !== null);
-
-// tri: d'abord par région, puis par nom
-places.sort((a, b) => {
-  if (a!.region === b!.region) {
-    return a!.name.localeCompare(b!.name);
-  }
-  return a!.region.localeCompare(b!.region);
-});
-
-// regroupement par région
-const grouped = new Map<string, typeof places>();
-for (const p of places) {
-  if (!p) continue;
-  if (!grouped.has(p.region)) grouped.set(p.region, []);
-  grouped.get(p.region)!.push(p);
+function formatSlug(slug: string | undefined) {
+  if (!slug) return "ce pays";
+  return slug
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 ---
 
-<BaseLayout title="Lieux — La Cité des Roses">
+<BaseLayout title={`Villes de ${formatSlug(slug as string)}`}>
   <section class="card">
-    <h1 class="page-title">Lieux de l’univers</h1>
+    <h1 class="page-title">Villes de {formatSlug(slug as string)}</h1>
     <p class="page-subtitle">
-      Palais, quartiers, ruelles, places et recoins de la Cité des Roses. Chaque
-      lieu a ses murs, ses rumeurs, et les secrets qu’on y laisse traîner.
+      Cette page « Villes » est encore en construction. Elle est juste là pour que
+      le build Astro arrête de faire sa diva et te laisse déployer ton site.
     </p>
 
-    {places.length === 0 && (
-      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
-        Aucun lieu trouvé. Ajoute des fichiers JSON dans
-        <code>src/data/lieux/&lt;slug&gt;.json</code>.
-      </p>
-    )}
-
-    {places.length > 0 && (
-      <div class="places-list">
-        {Array.from(grouped.entries()).map(([region, lieux]) => (
-          <section class="family-section">
-            <h2 class="family-title">{region}</h2>
-
-            <div class="family-grid">
-              {lieux.map((lieu) => (
-                <a
-                  class="character-card place-card"
-                  href={`/univers/lieux/${lieu.slug}/general`}
-                >
-                  <div class="place-thumb">
-                    <img
-                      src={lieu.image}
-                      alt={`Vue de ${lieu.name}`}
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <div class="character-info">
-                    <h3>{lieu.name}</h3>
-
-                    {(lieu.subtitle || lieu.typeLabel) && (
-                      <p class="character-role">
-                        {lieu.subtitle || lieu.typeLabel}
-                      </p>
-                    )}
-
-                    {lieu.tag && (
-                      <p class="character-tag">{lieu.tag}</p>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-    )}
+    <p>
+      Plus tard, on pourra lier cette page à tes données (JSON de pays, de villes, etc.),
+      avec une vraie navigation, des cartes, tout ton délire d’Aureval.
+    </p>
   </section>
 </BaseLayout>
