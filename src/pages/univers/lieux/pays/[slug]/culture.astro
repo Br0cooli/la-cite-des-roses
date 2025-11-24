@@ -1,0 +1,353 @@
+---
+import CountryLayout from "@layouts/CountryLayout.astro";
+
+interface SocialClass {
+  name: string;
+  description?: string;
+  perception?: string;
+}
+
+interface Festival {
+  name: string;
+  season?: string;
+  type?: string;
+  description?: string;
+  symbolism?: string;
+}
+
+interface ArtForm {
+  name: string;
+  medium?: string;
+  description?: string;
+  socialContext?: string;
+}
+
+interface CustomOrHabit {
+  name: string;
+  context?: string;
+  description?: string;
+  fauxPas?: string;
+}
+
+interface Subculture {
+  name: string;
+  group?: string;
+  traits?: string;
+  description?: string;
+}
+
+interface CultureData {
+  identitySummary?: string;
+  coreValues?: string[];
+  dominantReligion?: string;
+  religiousPractice?: string;
+  languages?: string[];
+  dialects?: string[];
+  socialClasses?: SocialClass[];
+  etiquette?: CustomOrHabit[];
+  arts?: ArtForm[];
+  festivals?: Festival[];
+  everydayLife?: string;
+  subcultures?: Subculture[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  culture: CultureData | null;
+}
+
+const { slug, culture } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("@data/lieux/pays/*/culture.json");
+
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as CultureData;
+
+      const match = path.match(/pays\/([^/]+)\/culture\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: { slug, culture: json }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/lieux/pays/${slug}`;
+
+const hasInteractive =
+  !!(culture?.coreValues && culture.coreValues.length > 0) ||
+  !!(culture?.festivals && culture.festivals.length > 0) ||
+  !!(culture?.subcultures && culture.subcultures.length > 0);
+---
+
+<CountryLayout
+  name="Culture & société"
+  basePath={basePath}
+  currentSection="culture"
+>
+  <section class="object-section">
+    <h2 class="section-title">Culture & société</h2>
+
+    {culture?.identitySummary && (
+      <p class="object-summary">{culture.identitySummary}</p>
+    )}
+
+    {!culture && (
+      <p class="object-empty">
+        Aucun fichier <code>culture.json</code> trouvé.<br />
+        Chemin attendu : <code>src/data/lieux/pays/{slug}/culture.json</code>.
+      </p>
+    )}
+
+    {culture && (
+      <>
+        <div class="country-general-grid">
+          <div class="country-main">
+
+            {(culture.coreValues && culture.coreValues.length > 0) ||
+            culture.everydayLife ? (
+              <article class="object-block">
+                <h3 class="object-block-title">Identité & valeurs</h3>
+
+                {culture.coreValues && culture.coreValues.length > 0 && (
+                  <div class="object-tags">
+                    {culture.coreValues.map((v) => (
+                      <span class="object-tag">{v}</span>
+                    ))}
+                  </div>
+                )}
+
+                {culture.everydayLife && (
+                  <p class="culture-paragraph">{culture.everydayLife}</p>
+                )}
+              </article>
+            ) : null}
+
+            {culture.socialClasses && culture.socialClasses.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Structure sociale</h3>
+                <ul class="culture-list">
+                  {culture.socialClasses.map((c) => (
+                    <li class="culture-item">
+                      <div class="culture-item-header">
+                        <span class="culture-item-name">{c.name}</span>
+                      </div>
+
+                      {c.description && (
+                        <p class="culture-item-desc">{c.description}</p>
+                      )}
+
+                      {c.perception && (
+                        <p class="culture-item-note">
+                          Perception : {c.perception}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+
+            {culture.arts && culture.arts.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Arts & expressions</h3>
+                <ul class="culture-list">
+                  {culture.arts.map((a) => (
+                    <li class="culture-item">
+                      <div class="culture-item-header">
+                        <span class="culture-item-name">{a.name}</span>
+
+                        {a.medium && (
+                          <span class="culture-item-tag">{a.medium}</span>
+                        )}
+                      </div>
+
+                      {a.description && (
+                        <p class="culture-item-desc">{a.description}</p>
+                      )}
+
+                      {a.socialContext && (
+                        <p class="culture-item-note">
+                          Contexte : {a.socialContext}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+          </div>
+
+          <aside class="country-aside">
+            {(culture.dominantReligion || culture.religiousPractice) && (
+              <section class="object-block">
+                <h3 class="object-block-title">Religion & croyances</h3>
+
+                {culture.dominantReligion && (
+                  <p class="culture-paragraph">
+                    <strong>Culte dominant :</strong> {culture.dominantReligion}
+                  </p>
+                )}
+
+                {culture.religiousPractice && (
+                  <p class="culture-paragraph">{culture.religiousPractice}</p>
+                )}
+              </section>
+            )}
+
+            {(culture.languages && culture.languages.length > 0) ||
+            (culture.dialects && culture.dialects.length > 0) ? (
+              <section class="object-block">
+                <h3 class="object-block-title">Langues & dialectes</h3>
+
+                {culture.languages && (
+                  <p class="culture-paragraph">
+                    <strong>Langues parlées :</strong>{" "}
+                    {culture.languages.join(", ")}
+                  </p>
+                )}
+
+                {culture.dialects && (
+                  <p class="culture-paragraph">
+                    <strong>Variantes locales :</strong>{" "}
+                    {culture.dialects.join(", ")}
+                  </p>
+                )}
+              </section>
+            ) : null}
+
+            {culture.etiquette && culture.etiquette.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Étiquette & faux pas</h3>
+                <ul class="culture-list">
+                  {culture.etiquette.map((e) => (
+                    <li class="culture-item">
+                      <div class="culture-item-header">
+                        <span class="culture-item-name">{e.name}</span>
+
+                        {e.context && (
+                          <span class="culture-item-tag">{e.context}</span>
+                        )}
+                      </div>
+
+                      {e.description && (
+                        <p class="culture-item-desc">{e.description}</p>
+                      )}
+
+                      {e.fauxPas && (
+                        <p class="culture-item-note">
+                          Faux pas : {e.fauxPas}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </aside>
+        </div>
+
+        {hasInteractive && (
+          <section class="object-block culture-map-block">
+            <h3 class="object-block-title">Carte vivante de la société</h3>
+
+            <p class="culture-map-intro">
+              Une vue rapide des fêtes, sous-cultures et pratiques qui donnent
+              à ce pays sa saveur sociale propre.
+            </p>
+
+            <div class="culture-map-layout">
+              <div class="culture-map-main">
+
+                {culture.festivals && (
+                  <div class="culture-map-section">
+                    <h4>Fêtes & célébrations</h4>
+
+                    <ul class="culture-festival-list">
+                      {culture.festivals.map((f) => (
+                        <li class="culture-festival-item">
+                          <div class="culture-festival-header">
+                            <span class="culture-festival-name">{f.name}</span>
+
+                            {(f.season || f.type) && (
+                              <span class="culture-festival-tag">
+                                {f.season}
+                                {f.season && f.type && " · "}
+                                {f.type}
+                              </span>
+                            )}
+                          </div>
+
+                          {f.description && (
+                            <p class="culture-festival-desc">{f.description}</p>
+                          )}
+
+                          {f.symbolism && (
+                            <p class="culture-festival-note">
+                              Symbolique : {f.symbolism}
+                            </p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {culture.subcultures && (
+                  <div class="culture-map-section">
+                    <h4>Groupes & sous-cultures</h4>
+
+                    <div class="culture-map-chips">
+                      {culture.subcultures.map((s) => (
+                        <div class="culture-chip">
+                          <span class="culture-chip-name">{s.name}</span>
+
+                          {s.group && (
+                            <span class="culture-chip-tag">{s.group}</span>
+                          )}
+
+                          {s.description && (
+                            <p class="culture-chip-desc">{s.description}</p>
+                          )}
+
+                          {s.traits && (
+                            <p class="culture-chip-note">
+                              Traits : {s.traits}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <aside class="culture-map-aside">
+                {culture.notes && culture.notes.length > 0 ? (
+                  <ul class="culture-notes">
+                    {culture.notes.map((n) => (
+                      <li>{n}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="culture-map-note">
+                    Tu pourras relier plus tard chaque fête ou sous-culture à
+                    des scènes précises, des lieux ou des personnages impliqués.
+                  </p>
+                )}
+              </aside>
+            </div>
+          </section>
+        )}
+      </>
+    )}
+  </section>
+</CountryLayout>

@@ -1,0 +1,16 @@
+{
+  "axes": [
+    { "label": "Volonté", "value": 9 },
+    { "label": "Finesse politique", "value": 8 },
+    { "label": "Impulsivité", "value": 7 },
+    { "label": "Empathie", "value": 6 },
+    { "label": "Résilience", "value": 9 }
+  ],
+  "skills": [
+    {
+      "name": "Jeux de cour",
+      "level": 8,
+      "note": "Maîtrise des codes, des rumeurs et des alliances implicites."
+    }
+  ]
+}

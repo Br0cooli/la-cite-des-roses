@@ -1,0 +1,28 @@
+{
+  "name": "Royaume d'Aureval",
+  "subtitle": "Couronne des lys blancs",
+  "typeLabel": "Royaume",
+  "capital": "Vallenera",
+  "regionTag": "Cités du Sud",
+  "emblem": "Lys blanc sur fond bleu nuit",
+  "summary": "Ancienne monarchie prospère fragilisée par...",
+  "governmentType": "Monarchie héréditaire",
+  "populationApprox": "Quelques millions d’habitants",
+  "keywords": ["royaume côtier", "intrigues de cour", "commerce maritime"],
+  "regions": [
+    {
+      "name": "Vallenera",
+      "type": "Province-capitale",
+      "summary": "Cœur politique et symbolique du royaume.",
+      "link": "/univers/lieux/regions/vallenera"
+    }
+  ],
+  "keyCities": [
+    {
+      "name": "Vallenera",
+      "importance": "Capitale",
+      "summary": "Ville des lys et du palais royal.",
+      "link": "/univers/lieux/villes/vallenera"
+    }
+  ]
+}

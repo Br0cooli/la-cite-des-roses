@@ -1,0 +1,86 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+interface Props {
+  name: string;
+  subtitle?: string;
+  tag?: string;   // ex : "Royaume d'Aureval"
+  arc?: string;   // ex : "L’Ascension du Lys Blanc"
+  basePath: string;
+  currentSection: string;
+}
+
+const sections = [
+  { id: "general", label: "Général" },
+  { id: "stats", label: "Statistiques" },
+  { id: "passe", label: "Passé" },
+  { id: "timeline", label: "Chronologie" },
+  { id: "moodboard", label: "Moodboard" },
+  { id: "interview", label: "Interview" },
+  { id: "inventaire", label: "Inventaire" },
+  { id: "galerie", label: "Galerie" }
+];
+
+const { name, subtitle, tag, arc, basePath, currentSection } = Astro.props as Props;
+const normalizedBasePath = (basePath || "").replace(/\/+$/, "");
+---
+
+<BaseLayout title={`${name} — La Cité des Roses`}>
+  <!-- TOUT dans une seule card, comme les pays -->
+  <section class="card character-shell">
+
+    <!-- Header long, même structure que CountryLayout -->
+    <header class="object-header character-header">
+      <div class="object-header-text">
+        <p class="object-type">Personnage</p>
+
+        <h1 class="object-name">
+          {name}
+        </h1>
+
+        {subtitle && (
+          <p class="object-subtitle">
+            {subtitle}
+          </p>
+        )}
+
+        <div class="object-meta-row">
+          {tag && (
+            <span class="object-meta-pill">
+              {tag}
+            </span>
+          )}
+
+          {arc && (
+            <span class="object-meta-pill">
+              Arc&nbsp;: {arc}
+            </span>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <!-- Layout identique : sidebar nav + contenu -->
+    <div class="character-layout">
+      <aside class="character-sidebar">
+        <nav class="character-nav">
+          {sections.map((s) => (
+            <a
+              href={`${normalizedBasePath}/${s.id}`}
+              class={
+                "character-nav-link" +
+                (s.id === currentSection ? " is-active" : "")
+              }
+            >
+              {s.label}
+            </a>
+          ))}
+        </nav>
+      </aside>
+
+      <div class="character-main">
+        <slot />
+      </div>
+    </div>
+  </section>
+</BaseLayout>

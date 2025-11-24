@@ -1,0 +1,312 @@
+---
+import CountryLayout from "@layouts/CountryLayout.astro";
+
+interface CountryRegion {
+  name: string;
+  type?: string;
+  summary?: string;
+  link?: string;
+}
+
+interface KeyCity {
+  name: string;
+  importance?: string;
+  summary?: string;
+  link?: string;
+}
+
+interface CountryMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  capital?: string;
+  regionTag?: string;
+  emblem?: string;
+  summary?: string;
+  governmentType?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  regions?: CountryRegion[];
+  keyCities?: KeyCity[];
+  [key: string]: any;
+}
+
+interface MapRegionRef {
+  id: string;
+  name: string;
+  type?: string;
+  description?: string;
+  link?: string;
+}
+
+interface MapCityRef {
+  id: string;
+  name: string;
+  role?: string;
+  description?: string;
+  link?: string;
+}
+
+interface CountryMapData {
+  image?: string;
+  legend?: string;
+  regions?: MapRegionRef[];
+  keyCities?: MapCityRef[];
+  notes?: string[];
+  intro?: string;
+}
+
+interface Props {
+  meta: CountryMeta;
+  slug: string;
+  mapData: CountryMapData | null;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/pays/*/meta.json");
+  const mapDataModules = import.meta.glob("@data/lieux/pays/*/carte.json");
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as CountryMeta;
+
+      const match = path.match(/pays\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      let mapData: CountryMapData | null = null;
+      const mapDataResolver: any =
+        mapDataModules[path.replace("meta.json", "carte.json")];
+
+      if (mapDataResolver) {
+        const mapMod: any = await mapDataResolver();
+        mapData = (mapMod?.default ?? mapMod) as CountryMapData;
+      }
+
+      return {
+        params: { slug },
+        props: {
+          meta: data,
+          slug,
+          mapData
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { meta, slug, mapData } = Astro.props as Props;
+
+// Même basePath que la page "general" pour la nav
+const basePath = `/univers/lieux/pays/${slug}`;
+
+const mapRegions = mapData?.regions ?? [];
+const mapCities = mapData?.keyCities ?? [];
+
+const hasAnyRegions =
+  (mapRegions && mapRegions.length > 0) ||
+  (meta.regions && meta.regions.length > 0);
+
+const hasAnyCities =
+  (mapCities && mapCities.length > 0) ||
+  (meta.keyCities && meta.keyCities.length > 0);
+---
+
+<CountryLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  capital={meta.capital}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
+  basePath={basePath}
+  currentSection="carte"
+>
+  <section class="object-section">
+    <h2 class="section-title">Carte & sous-régions</h2>
+
+    {mapData?.intro && (
+      <p class="country-map-intro">
+        {mapData.intro}
+      </p>
+    )}
+
+    <div class="country-map-grid">
+      <div class="country-map-visual">
+        {/* CARTE STATIQUE : contrôlée par mapData.image */}
+        {mapData?.image ? (
+          <div class="country-map-frame">
+            <img
+              src={mapData.image}
+              alt={`Carte de ${meta.name}`}
+              class="country-map-image"
+            />
+          </div>
+        ) : (
+          <div class="country-map-placeholder">
+            <p>
+              Aucune carte n’a encore été définie pour ce pays.
+            </p>
+            <p class="country-map-placeholder-note">
+              Ajoute un champ <code>"image": "/cartes/slug.png"</code> dans
+              <code>carte.json</code> pour l’afficher ici.
+            </p>
+          </div>
+        )}
+
+        {mapData?.legend && (
+          <div class="country-map-legend">
+            <h3>Légende</h3>
+            <p>{mapData.legend}</p>
+          </div>
+        )}
+      </div>
+
+      {/* PANNEAU D’INFOS LIÉES À LA CARTE */}
+      <aside class="country-map-sidepanel">
+        {hasAnyRegions && (
+          <section class="object-block">
+            <h3 class="object-block-title">Régions & zones</h3>
+            <ul class="country-map-list">
+              {/* D’abord les régions de carte.json */}
+              {mapRegions.map((r) => (
+                <li class="country-map-item">
+                  {r.link ? (
+                    <a href={r.link} class="country-map-link">
+                      <span class="country-map-name">{r.name}</span>
+                      {r.type && (
+                        <span class="country-map-type">{r.type}</span>
+                      )}
+                    </a>
+                  ) : (
+                    <div class="country-map-link">
+                      <span class="country-map-name">{r.name}</span>
+                      {r.type && (
+                        <span class="country-map-type">{r.type}</span>
+                      )}
+                    </div>
+                  )}
+                  {r.description && (
+                    <p class="country-map-desc">{r.description}</p>
+                  )}
+                </li>
+              ))}
+
+              {/* Puis les régions du meta, si pas déjà listées */}
+              {meta.regions &&
+                meta.regions
+                  .filter(
+                    (r) =>
+                      !mapRegions.some(
+                        (mr) => mr.name === r.name || mr.id === r.name
+                      )
+                  )
+                  .map((r) => (
+                    <li class="country-map-item">
+                      {r.link ? (
+                        <a href={r.link} class="country-map-link">
+                          <span class="country-map-name">{r.name}</span>
+                          {r.type && (
+                            <span class="country-map-type">{r.type}</span>
+                          )}
+                        </a>
+                      ) : (
+                        <div class="country-map-link">
+                          <span class="country-map-name">{r.name}</span>
+                          {r.type && (
+                            <span class="country-map-type">{r.type}</span>
+                          )}
+                        </div>
+                      )}
+                      {r.summary && (
+                        <p class="country-map-desc">{r.summary}</p>
+                      )}
+                    </li>
+                  ))}
+            </ul>
+          </section>
+        )}
+
+        {hasAnyCities && (
+          <section class="object-block">
+            <h3 class="object-block-title">Villes majeures</h3>
+            <ul class="country-map-list">
+              {/* Villes de carte.json */}
+              {mapCities.map((c) => (
+                <li class="country-map-item">
+                  {c.link ? (
+                    <a href={c.link} class="country-map-link">
+                      <span class="country-map-name">{c.name}</span>
+                      {c.role && (
+                        <span class="country-map-type">{c.role}</span>
+                      )}
+                    </a>
+                  ) : (
+                    <div class="country-map-link">
+                      <span class="country-map-name">{c.name}</span>
+                      {c.role && (
+                        <span class="country-map-type">{c.role}</span>
+                      )}
+                    </div>
+                  )}
+                  {c.description && (
+                    <p class="country-map-desc">{c.description}</p>
+                  )}
+                </li>
+              ))}
+
+              {/* Complément avec keyCities du meta */}
+              {meta.keyCities &&
+                meta.keyCities
+                  .filter(
+                    (c) =>
+                      !mapCities.some(
+                        (mc) => mc.name === c.name || mc.id === c.name
+                      )
+                  )
+                  .map((c) => (
+                    <li class="country-map-item">
+                      {c.link ? (
+                        <a href={c.link} class="country-map-link">
+                          <span class="country-map-name">{c.name}</span>
+                          {c.importance && (
+                            <span class="country-map-type">
+                              {c.importance}
+                            </span>
+                          )}
+                        </a>
+                      ) : (
+                        <div class="country-map-link">
+                          <span class="country-map-name">{c.name}</span>
+                          {c.importance && (
+                            <span class="country-map-type">
+                              {c.importance}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {c.summary && (
+                        <p class="country-map-desc">{c.summary}</p>
+                      )}
+                    </li>
+                  ))}
+            </ul>
+          </section>
+        )}
+
+        {mapData?.notes && mapData.notes.length > 0 && (
+          <section class="object-block">
+            <h3 class="object-block-title">Remarques géographiques</h3>
+            <ul class="country-map-notes">
+              {mapData.notes.map((n) => (
+                <li>{n}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
+  </section>
+</CountryLayout>

@@ -1,0 +1,27 @@
+{
+  "image": "/cartes/aureval.png",
+  "intro": "Le royaume d’Aureval s’étend le long d’un littoral escarpé...",
+  "legend": "Les zones rosées représentent les provinces, les lys les lieux de pouvoir...",
+  "regions": [
+    {
+      "id": "vallenera",
+      "name": "Vallenera",
+      "type": "Province-capitale",
+      "description": "Cœur politique du royaume.",
+      "link": "/univers/lieux/regions/vallenera"
+    }
+  ],
+  "keyCities": [
+    {
+      "id": "vallenera-ville",
+      "name": "Vallenera",
+      "role": "Capitale",
+      "description": "Ville des lys blancs et du palais royal.",
+      "link": "/univers/lieux/villes/vallenera"
+    }
+  ],
+  "notes": [
+    "La côte sud concentre la majorité des ports marchands.",
+    "L’intérieur des terres est plus rural, structuré par de grands domaines nobles."
+  ]
+}

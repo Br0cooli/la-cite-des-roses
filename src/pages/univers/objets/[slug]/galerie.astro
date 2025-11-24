@@ -1,0 +1,167 @@
+---
+import ObjectLayout from "@layouts/ObjectLayout.astro";
+
+interface GalleryImage {
+  src: string;
+  alt?: string;
+  caption?: string;
+  category?: string;
+}
+
+interface GalleryData {
+  featured?: GalleryImage | null;
+  variations?: GalleryImage[];
+  details?: GalleryImage[];
+  storyMoments?: GalleryImage[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  gallery: GalleryData | null;
+}
+
+const { slug, gallery } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("@data/objets/*/galerie.json");
+
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as GalleryData;
+
+      const match = path.match(/objets\/([^/]+)\/galerie\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: { slug, gallery: json }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/objets/${slug}`;
+---
+
+<ObjectLayout
+  name="Galerie visuelle"
+  basePath={basePath}
+  currentSection="galerie"
+>
+  <section class="object-section">
+    <h2 class="section-title">Galerie de l’objet</h2>
+
+    {gallery?.featured && (
+      <div class="object-gallery-featured">
+        <div class="object-gallery-featured-image">
+          <img
+            src={gallery.featured.src}
+            alt={gallery.featured.alt || "Illustration principale de l’objet"}
+            loading="lazy"
+          />
+        </div>
+
+        <div class="object-gallery-featured-text">
+          <h3 class="object-block-title">Illustration principale</h3>
+
+          {gallery.featured.caption && (
+            <p class="object-gallery-caption">{gallery.featured.caption}</p>
+          )}
+
+          {gallery.featured.category && (
+            <p class="object-gallery-tag">{gallery.featured.category}</p>
+          )}
+        </div>
+      </div>
+    )}
+
+    {!gallery && (
+      <p class="object-empty">
+        Aucun fichier <code>galerie.json</code> trouvé.<br />
+        Chemin attendu : <code>src/data/objets/{slug}/galerie.json</code>.
+      </p>
+    )}
+
+    {gallery && (
+      <div class="object-gallery-layout">
+        {gallery.variations && gallery.variations.length > 0 && (
+          <section class="object-block">
+            <h3 class="object-block-title">Variations & études</h3>
+            <div class="object-gallery-grid">
+              {gallery.variations.map((img) => (
+                <figure class="object-gallery-card">
+                  <img src={img.src} alt={img.alt || ""} loading="lazy" />
+                  {(img.caption || img.category) && (
+                    <figcaption>
+                      {img.caption && <p>{img.caption}</p>}
+                      {img.category && (
+                        <span class="object-gallery-chip">{img.category}</span>
+                      )}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {gallery.details && gallery.details.length > 0 && (
+          <section class="object-block">
+            <h3 class="object-block-title">Détails & gros plans</h3>
+            <div class="object-gallery-grid small">
+              {gallery.details.map((img) => (
+                <figure class="object-gallery-card">
+                  <img src={img.src} alt={img.alt || ""} loading="lazy" />
+                  {(img.caption || img.category) && (
+                    <figcaption>
+                      {img.caption && <p>{img.caption}</p>}
+                      {img.category && (
+                        <span class="object-gallery-chip">{img.category}</span>
+                      )}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {gallery.storyMoments && gallery.storyMoments.length > 0 && (
+          <section class="object-block">
+            <h3 class="object-block-title">Moments in-universe</h3>
+            <div class="object-gallery-grid">
+              {gallery.storyMoments.map((img) => (
+                <figure class="object-gallery-card">
+                  <img src={img.src} alt={img.alt || ""} loading="lazy" />
+                  {(img.caption || img.category) && (
+                    <figcaption>
+                      {img.caption && <p>{img.caption}</p>}
+                      {img.category && (
+                        <span class="object-gallery-chip">{img.category}</span>
+                      )}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {gallery.notes && gallery.notes.length > 0 && (
+          <section class="object-block">
+            <h3 class="object-block-title">Notes d’autrice</h3>
+            <ul class="object-notes">
+              {gallery.notes.map((note) => (
+                <li>{note}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+    )}
+  </section>
+</ObjectLayout>

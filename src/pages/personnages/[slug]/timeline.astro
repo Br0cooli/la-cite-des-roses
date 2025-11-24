@@ -1,0 +1,151 @@
+---
+import CharacterLayout from "../../../layouts/CharacterLayout.astro";
+
+interface MetaPersonnage {
+  name: string;
+  title?: string;
+  role?: string;
+  tag?: string;
+  arc?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
+interface TimelineEvent {
+  id?: string;
+  label: string;        // titre de l’événement
+  period?: string;      // ex : "Enfance", "Adolescence"
+  when?: string;        // ex : "0 ans", "16 ans", "Début de l’histoire"
+  description: string;
+}
+
+interface TimelineData {
+  events: TimelineEvent[];
+}
+
+interface Props {
+  meta: MetaPersonnage;
+  slug: string;
+  timeline: TimelineData | null;
+}
+
+const { meta, slug, timeline } = Astro.props as Props;
+const basePath = `/personnages/${slug}`;
+
+// ROUTE DYNAMIQUE : /personnages/[slug]/timeline
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
+  const timelineModules = import.meta.glob("../../../data/personnages/*/timeline.json");
+
+  const timelineMap: Record<string, TimelineData> = {};
+
+  await Promise.all(
+    Object.entries(timelineModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as TimelineData;
+
+      const match = path.match(/personnages\/([^/]+)\/timeline\.json$/);
+      const s = match ? match[1] : "";
+      if (s) timelineMap[s] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MetaPersonnage;
+
+      const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          meta: data,
+          slug: s,
+          timeline: timelineMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+---
+
+<CharacterLayout
+  name={meta.name}
+  subtitle={meta.title || meta.role}
+  tag={meta.tag}
+  arc={meta.arc}
+  basePath={basePath}
+  currentSection="timeline"
+>
+  <section class="card">
+    <h3 class="page-title" style="margin-left:0;">Chronologie</h3>
+    <p class="page-subtitle" style="margin-left:0;">
+      Déroulé des moments décisifs de la vie de {meta.name}&nbsp;: ce qui le ou
+      la façonne avant et pendant l’histoire principale.
+    </p>
+
+    {timeline && timeline.events && timeline.events.length > 0 ? (
+      <div class="chronology-layout timeline-personnage">
+        <div class="chronology-grid">
+          <section class="chronology-column">
+            <header class="chronology-header">
+              <h2 class="chronology-column-title">
+                Parcours de {meta.name}
+              </h2>
+              <p class="chronology-column-subtitle">
+                Les événements sont listés du plus ancien au plus récent. Les
+                points marquent les bascules importantes dans son histoire.
+              </p>
+            </header>
+
+            <div class="chronology-body">
+              {timeline.events.map((evt) => (
+                <div class="chronology-row">
+                  <div class="chronology-cell">
+                    {/* Rail vertical + point */}
+                    <div class="chronology-timeline-rail">
+                      <div class="chronology-timeline-dot"></div>
+                    </div>
+
+                    {/* Carte d’événement */}
+                    <article class="chronology-card">
+                      <header class="chronology-card-header">
+                        <div class="chronology-card-meta">
+                          {evt.period && (
+                            <span class="chronology-tag">
+                              {evt.period}
+                            </span>
+                          )}
+                          {evt.when && (
+                            <span class="chronology-when">
+                              {evt.when}
+                            </span>
+                          )}
+                        </div>
+                        <h3 class="chronology-title">{evt.label}</h3>
+                      </header>
+
+                      <p class="chronology-desc">
+                        {evt.description}
+                      </p>
+                    </article>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    ) : (
+      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+        Aucune chronologie n’a encore été définie pour ce personnage. Tu peux
+        créer un fichier
+        <code>src/data/personnages/{slug}/timeline.json</code> pour activer cette page.
+      </p>
+    )}
+  </section>
+</CharacterLayout>

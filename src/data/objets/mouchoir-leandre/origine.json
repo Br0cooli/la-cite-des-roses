@@ -1,0 +1,15 @@
+{
+  "creationContext": "Le mouchoir fut fabriqué dans une petite échoppe de couture du quartier marchand d’Aureval, une boutique simple qui survivait surtout grâce aux commandes des familles modestes. Contrairement aux objets précieux de la noblesse, ce mouchoir n’a jamais été pensé pour durer des générations, ni pour porter une quelconque charge symbolique. Il a été créé comme un objet du quotidien, discret et pratique.",
+  "materials": "Un tissu crème en coton fin, bordé à la main d’un fil d’or pâle. Le fil n’était pas réellement précieux : il s’agissait d’un alliage bon marché imitant l’or véritable, couramment utilisé dans les quartiers non nobles pour donner une touche d’élégance sans exploser le budget.",
+  "craftingTechnique": "La couturière qui l’a fabriqué utilisait un point serré et régulier, caractéristique de son atelier. L’initiale brodée dans un coin du tissu fut réalisée avec une aiguille plus fine, sur un tambour de broderie, selon une méthode traditionnelle transmise par les artisanes locales.",
+  "initialOwner": "Le mouchoir a été acheté par la mère de Léandre, à une époque où elle économisait chaque pièce pour offrir à son fils au moins une chose un peu jolie dans sa vie. C’était un cadeau d’anniversaire, modeste mais sincère.",
+  "historyOfUse": [
+    "Durant son adolescence, Léandre l’utilisait pour essuyer la sueur de ses entraînements, puis pour nettoyer ses blessures lorsqu’il rentrait tard.",
+    "En tant que garde, il le gardait rangé dans une poche intérieure, plié avec soin ; un geste presque superstitieux, comme si cet objet personnel le protégeait d'un monde trop grand pour lui.",
+    "Le tissu s’est usé avec les années, s’effilochant légèrement sur les bords. Chaque tache et chaque trace est restée malgré les lavages, comme les strates d’un carnet intime."
+  ],
+  "manufacturingAnecdotes": [
+    "La couturière n’avait aucune idée que son travail finirait dans la poche d’un homme qui deviendrait l’un des piliers du destin royal d’Aureval.",
+    "Le fil d’or pâle utilisé provient d’une bobine presque vide que la couturière voulait rentabiliser. Elle l’avait gardée pour les clients qui demandaient « quelque chose d’un peu plus joli que d’habitude »."
+  ]
+}

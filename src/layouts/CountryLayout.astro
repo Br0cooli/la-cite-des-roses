@@ -1,0 +1,101 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+interface Props {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;      // Royaume, Cité-État, Empire...
+  capital?: string;
+  regionTag?: string;      // Continent / grande région
+  emblem?: string;         // Devise / symbole
+  basePath: string;        // ex: "/univers/lieux/aureval"
+  currentSection: string;  // "general", "geographie", "politique", "culture", "carte"
+}
+
+const {
+  name,
+  subtitle,
+  typeLabel,
+  capital,
+  regionTag,
+  emblem,
+  basePath,
+  currentSection
+} = Astro.props as Props;
+
+const normalizedBasePath = (basePath || "").replace(/\/+$/, "");
+
+const sections = [
+  { id: "general",    label: "Général" },
+  { id: "geographie", label: "Géographie" },
+  { id: "politique",  label: "Politique & pouvoir" },
+  { id: "culture",    label: "Culture & société" },
+  { id: "economie",   label: "Économie & ressources" },
+  { id: "carte",      label: "Carte & sous-régions" }
+];
+---
+
+<BaseLayout title={name ? `${name} — Pays` : "Pays"}>
+  <div class="card">
+
+    <header class="object-header">
+      <div class="object-header-text">
+        {typeLabel && (
+          <p class="object-type">
+            {typeLabel}
+          </p>
+        )}
+
+        <h1 class="object-name">
+          {name}
+        </h1>
+
+        {subtitle && (
+          <p class="object-subtitle">
+            {subtitle}
+          </p>
+        )}
+
+        <div class="object-meta-row">
+          {capital && (
+            <span class="object-meta-pill">
+              Capitale&nbsp;: {capital}
+            </span>
+          )}
+          {regionTag && (
+            <span class="object-meta-pill">
+              Région&nbsp;: {regionTag}
+            </span>
+          )}
+          {emblem && (
+            <span class="object-meta-pill">
+              Emblème&nbsp;: {emblem}
+            </span>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <div class="object-layout">
+      <aside class="object-sidebar">
+        <nav class="object-nav">
+          {sections.map((s) => (
+            <a
+              href={`${normalizedBasePath}/${s.id}`}
+              class={
+                "object-nav-link" +
+                (currentSection === s.id ? " is-active" : "")
+              }
+            >
+              {s.label}
+            </a>
+          ))}
+        </nav>
+      </aside>
+
+      <div class="object-content">
+        <slot />
+      </div>
+    </div>
+  </div>
+</BaseLayout>

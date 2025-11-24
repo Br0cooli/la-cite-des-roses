@@ -1,0 +1,307 @@
+---
+import CountryLayout from "@layouts/CountryLayout.astro";
+
+interface ClimateEntry {
+  name: string;
+  area?: string;
+  description?: string;
+}
+
+interface TerrainZone {
+  name: string;
+  type?: string;
+  description?: string;
+  importance?: string;
+}
+
+interface BorderEntry {
+  side: string;
+  neighbor?: string;
+  description?: string;
+}
+
+interface TravelRoute {
+  name: string;
+  type?: string;
+  from?: string;
+  to?: string;
+  description?: string;
+}
+
+interface HazardEntry {
+  name: string;
+  type?: string;
+  description?: string;
+}
+
+interface RegionPin {
+  name: string;
+  type?: string;
+  summary?: string;
+  link?: string;
+}
+
+interface GeographyData {
+  locationSummary?: string;
+  globalShape?: string;
+  climates?: ClimateEntry[];
+  terrainZones?: TerrainZone[];
+  borders?: BorderEntry[];
+  travelRoutes?: TravelRoute[];
+  hazards?: HazardEntry[];
+  regionPins?: RegionPin[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  geo: GeographyData | null;
+}
+
+const { slug, geo } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("@data/lieux/pays/*/geographie.json");
+
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as GeographyData;
+
+      const match = path.match(/pays\/([^/]+)\/geographie\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: { slug, geo: json }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/lieux/pays/${slug}`;
+const hasMap =
+  !!(geo?.regionPins && geo.regionPins.length > 0) ||
+  !!(geo?.terrainZones && geo.terrainZones.length > 0);
+---
+
+<CountryLayout
+  name="Géographie"
+  basePath={basePath}
+  currentSection="geographie"
+>
+  <section class="object-section">
+    <h2 class="section-title">Géographie & relief</h2>
+
+    {geo?.locationSummary && (
+      <p class="object-summary">{geo.locationSummary}</p>
+    )}
+
+    {!geo && (
+      <p class="object-empty">
+        Aucun fichier <code>geographie.json</code> trouvé.<br />
+        Chemin attendu : <code>src/data/lieux/pays/{slug}/geographie.json</code>.
+      </p>
+    )}
+
+    {geo && (
+      <>
+        <div class="country-general-grid">
+          <div class="country-main">
+            {geo.globalShape && (
+              <article class="object-block">
+                <h3 class="object-block-title">Morphologie du territoire</h3>
+                <p>{geo.globalShape}</p>
+              </article>
+            )}
+
+            {geo.terrainZones && geo.terrainZones.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Relief & grands ensembles</h3>
+                <ul class="geo-list">
+                  {geo.terrainZones.map((z) => (
+                    <li class="geo-item">
+                      <div class="geo-item-header">
+                        <span class="geo-item-name">{z.name}</span>
+                        {z.type && (
+                          <span class="geo-item-tag">{z.type}</span>
+                        )}
+                      </div>
+
+                      {z.description && (
+                        <p class="geo-item-desc">{z.description}</p>
+                      )}
+
+                      {z.importance && (
+                        <p class="geo-item-note">{z.importance}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+
+            {geo.hazards && geo.hazards.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Zones à risque</h3>
+                <ul class="geo-list">
+                  {geo.hazards.map((h) => (
+                    <li class="geo-item">
+                      <div class="geo-item-header">
+                        <span class="geo-item-name">{h.name}</span>
+                        {h.type && (
+                          <span class="geo-item-tag is-danger">{h.type}</span>
+                        )}
+                      </div>
+
+                      {h.description && (
+                        <p class="geo-item-desc">{h.description}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+          </div>
+
+          <aside class="country-aside">
+            {geo.climates && geo.climates.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Climats</h3>
+                <ul class="geo-list">
+                  {geo.climates.map((c) => (
+                    <li class="geo-item">
+                      <div class="geo-item-header">
+                        <span class="geo-item-name">{c.name}</span>
+                        {c.area && (
+                          <span class="geo-item-tag">{c.area}</span>
+                        )}
+                      </div>
+
+                      {c.description && (
+                        <p class="geo-item-desc">{c.description}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {geo.borders && geo.borders.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Frontières & voisins</h3>
+                <ul class="geo-list">
+                  {geo.borders.map((b) => (
+                    <li class="geo-item">
+                      <div class="geo-item-header">
+                        <span class="geo-item-name">{b.side}</span>
+                        {b.neighbor && (
+                          <span class="geo-item-tag">{b.neighbor}</span>
+                        )}
+                      </div>
+
+                      {b.description && (
+                        <p class="geo-item-desc">{b.description}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {geo.travelRoutes && geo.travelRoutes.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Routes & axes majeurs</h3>
+                <ul class="geo-routes">
+                  {geo.travelRoutes.map((r) => (
+                    <li class="geo-route-item">
+                      <div class="geo-route-header">
+                        <span class="geo-route-name">{r.name}</span>
+                        {r.type && (
+                          <span class="geo-route-tag">{r.type}</span>
+                        )}
+                      </div>
+
+                      {(r.from || r.to) && (
+                        <p class="geo-route-path">
+                          {r.from && <span>{r.from}</span>}
+                          {(r.from || r.to) && <span>&nbsp;→&nbsp;</span>}
+                          {r.to && <span>{r.to}</span>}
+                        </p>
+                      )}
+
+                      {r.description && (
+                        <p class="geo-route-desc">{r.description}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </aside>
+        </div>
+
+        {hasMap && (
+          <section class="object-block geo-map-block">
+            <h3 class="object-block-title">Carte conceptuelle interactive</h3>
+            <p class="geo-map-intro">
+              Cette carte sert de hub rapide vers les points importants du pays.
+            </p>
+
+            <div class="geo-map-layout">
+              <div class="geo-map-main">
+                {geo.regionPins && geo.regionPins.length > 0 && (
+                  <div class="geo-map-section">
+                    <h4>Régions & provinces</h4>
+                    <div class="geo-map-chips">
+                      {geo.regionPins.map((p) => (
+                        <a
+                          href={p.link || "#"}
+                          class={
+                            "geo-chip" + (!p.link ? " is-disabled" : "")
+                          }
+                        >
+                          <span class="geo-chip-name">{p.name}</span>
+                          {p.type && (
+                            <span class="geo-chip-tag">{p.type}</span>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {geo.terrainZones && geo.terrainZones.length > 0 && (
+                  <div class="geo-map-section">
+                    <h4>Zones géographiques clés</h4>
+                    <div class="geo-map-chips">
+                      {geo.terrainZones.slice(0, 8).map((z) => (
+                        <span class="geo-chip is-ghost">{z.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <aside class="geo-map-aside">
+                {geo.notes && geo.notes.length > 0 ? (
+                  <ul class="geo-notes">
+                    {geo.notes.map((note) => (
+                      <li>{note}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="geo-map-note">
+                    Plus tard, tu pourras utiliser une vraie carte SVG interactive.
+                  </p>
+                )}
+              </aside>
+            </div>
+          </section>
+        )}
+      </>
+    )}
+  </section>
+</CountryLayout>

@@ -1,0 +1,171 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+interface PlaceMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;   // Royaume, Cité-État, Ville portuaire, Monument...
+  capital?: string;
+  regionTag?: string;
+  emblem?: string;
+  palette?: string[];
+  summary?: string;
+  [key: string]: any;
+}
+
+interface PlaceCard {
+  slug: string;
+  meta: PlaceMeta;
+  category: string;     // ex : "pays", "villes", "monuments"
+}
+
+// On charge TOUS les meta.json des lieux : pays, villes, régions, monuments...
+const modules = import.meta.glob("@data/lieux/*/*/meta.json", {
+  eager: true
+});
+
+// On transforme en liste typée et on récupère le type depuis le dossier
+const allPlaces: PlaceCard[] = Object.entries(modules)
+  .map(([path, mod]) => {
+    const data = (mod as any).default ?? mod;
+    const meta = data as PlaceMeta;
+
+    // path ressemble à ".../data/lieux/pays/aureval/meta.json"
+    // ou ".../data/lieux/villes/claribois/meta.json"
+    const match = path.match(/lieux\/([^/]+)\/([^/]+)\/meta\.json$/);
+    if (!match) return null;
+
+    const [, category, slug] = match;
+
+    if (!slug || !meta?.name) return null;
+
+    return { slug, meta, category };
+  })
+  .filter((p): p is PlaceCard => !!p);
+
+// On groupe par catégorie (pays, villes, monuments, etc.)
+const groupedByCategory: Record<string, PlaceCard[]> = {};
+
+for (const place of allPlaces) {
+  if (!groupedByCategory[place.category]) {
+    groupedByCategory[place.category] = [];
+  }
+  groupedByCategory[place.category].push(place);
+}
+
+// On trie les lieux de chaque catégorie par ordre alphabétique
+for (const category in groupedByCategory) {
+  groupedByCategory[category].sort((a, b) =>
+    a.meta.name.localeCompare(b.meta.name, "fr")
+  );
+}
+
+// Option : ordre de priorité des catégories
+const CATEGORY_ORDER = ["pays", "regions", "villes", "monuments"];
+
+function getCategoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    pays: "Pays",
+    regions: "Provinces",
+    villes: "Villes",
+    monuments: "Monuments & lieux remarquables"
+  };
+
+  if (labels[category]) return labels[category];
+
+  // Fallback : capitaliser le dossier
+  return category.charAt(0).toUpperCase() + category.slice(1);
+}
+
+// Liste des catégories effectivement présentes, triées selon CATEGORY_ORDER
+const categories = Object.keys(groupedByCategory).sort((a, b) => {
+  const ia = CATEGORY_ORDER.indexOf(a);
+  const ib = CATEGORY_ORDER.indexOf(b);
+
+  if (ia === -1 && ib === -1) {
+    return a.localeCompare(b, "fr");
+  }
+  if (ia === -1) return 1;
+  if (ib === -1) return -1;
+  return ia - ib;
+});
+---
+
+<BaseLayout title="Atlas des lieux">
+  <section class="card">
+    <h2 class="page-title">Atlas des Lieux</h2>
+    <p class="page-subtitle">
+      Vue d’ensemble des territoires, cités et lieux remarquables qui composent le monde de la Cité des Roses.
+    </p>
+
+    {categories.length === 0 && (
+      <p class="object-empty">
+        Aucun lieu n’a encore été détecté.<br />
+        Ajoute des fichiers <code>meta.json</code> dans <code>src/data/lieux/&lt;type&gt;/&lt;slug&gt;/</code>.
+      </p>
+    )}
+
+    {categories.map((category) => {
+      const places = groupedByCategory[category];
+      if (!places || places.length === 0) return null;
+
+      const label = getCategoryLabel(category);
+
+      return (
+        <section class="places-section">
+          <h3 class="places-section-title">{label}</h3>
+
+          <div class="places-grid">
+            {places.map(({ slug, meta }) => (
+              <a href={`/univers/lieux/${category}/${slug}/general`} class="place-card">
+                <div class="place-card-header">
+                  <h4 class="place-name">{meta.name}</h4>
+                  {meta.typeLabel && (
+                    <span class="place-type-pill">
+                      {meta.typeLabel}
+                    </span>
+                  )}
+                </div>
+
+                {meta.subtitle && (
+                  <p class="place-subtitle">
+                    {meta.subtitle}
+                  </p>
+                )}
+
+                <dl class="place-facts">
+                  {meta.capital && (
+                    <>
+                      <dt>Capitale</dt>
+                      <dd>{meta.capital}</dd>
+                    </>
+                  )}
+
+                  {meta.regionTag && (
+                    <>
+                      <dt>Région</dt>
+                      <dd>{meta.regionTag}</dd>
+                    </>
+                  )}
+
+                  {meta.emblem && (
+                    <>
+                      <dt>Emblème</dt>
+                      <dd>{meta.emblem}</dd>
+                    </>
+                  )}
+                </dl>
+
+                {meta.summary && (
+                  <p class="place-summary">
+                    {meta.summary}
+                  </p>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+  </section>
+</BaseLayout>

@@ -1,0 +1,258 @@
+---
+import CountryLayout from "@layouts/CountryLayout.astro";
+
+interface CountryRegion {
+  name: string;
+  type?: string;
+  summary?: string;
+  link?: string;
+}
+
+interface KeyCity {
+  name: string;
+  importance?: string;
+  summary?: string;
+  link?: string;
+}
+
+interface CountryMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  capital?: string;
+  regionTag?: string;
+  emblem?: string;
+  summary?: string;
+  governmentType?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  regions?: CountryRegion[];
+  keyCities?: KeyCity[];
+  [key: string]: any;
+}
+
+interface Props {
+  meta: CountryMeta;
+  slug: string;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/pays/*/meta.json");
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as CountryMeta;
+
+      const match = path.match(/pays\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: { meta: data, slug }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { meta, slug } = Astro.props as Props;
+const basePath = `/univers/lieux/pays/${slug}`;
+
+const hasMapData =
+  (meta.regions && meta.regions.length > 0) ||
+  (meta.keyCities && meta.keyCities.length > 0);
+---
+
+<CountryLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  capital={meta.capital}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
+  basePath={basePath}
+  currentSection="general"
+>
+  <section class="object-section">
+    <h2 class="section-title">Présentation générale</h2>
+
+    {meta.summary && <p class="object-summary">{meta.summary}</p>}
+
+    <div class="country-general-grid">
+      <div class="country-main">
+        <article class="object-block">
+          <h3 class="object-block-title">Profil du pays</h3>
+          <dl class="country-facts">
+            {meta.typeLabel && (
+              <>
+                <dt>Nature du territoire</dt>
+                <dd>{meta.typeLabel}</dd>
+              </>
+            )}
+
+            {meta.governmentType && (
+              <>
+                <dt>Régime politique</dt>
+                <dd>{meta.governmentType}</dd>
+              </>
+            )}
+
+            {meta.populationApprox && (
+              <>
+                <dt>Population approximative</dt>
+                <dd>{meta.populationApprox}</dd>
+              </>
+            )}
+
+            {meta.capital && (
+              <>
+                <dt>Capitale</dt>
+                <dd>{meta.capital}</dd>
+              </>
+            )}
+
+            {meta.regionTag && (
+              <>
+                <dt>Région / continent</dt>
+                <dd>{meta.regionTag}</dd>
+              </>
+            )}
+
+            {meta.emblem && (
+              <>
+                <dt>Emblème</dt>
+                <dd>{meta.emblem}</dd>
+              </>
+            )}
+          </dl>
+        </article>
+
+        {meta.keywords && meta.keywords.length > 0 && (
+          <article class="object-block">
+            <h3 class="object-block-title">Mots-clés</h3>
+            <div class="object-tags">
+              {meta.keywords.map((k) => (
+                <span class="object-tag">{k}</span>
+              ))}
+            </div>
+          </article>
+        )}
+      </div>
+
+      <aside class="country-aside">
+        {meta.regions && meta.regions.length > 0 && (
+          <section class="object-block">
+            <h3 class="object-block-title">Régions principales</h3>
+            <ul class="country-region-list">
+              {meta.regions.map((r) => (
+                <li class="country-region-item">
+                  {r.link ? (
+                    <a href={r.link} class="country-region-link">
+                      <span class="country-region-name">{r.name}</span>
+                      {r.type && <span class="country-region-type">{r.type}</span>}
+                    </a>
+                  ) : (
+                    <div class="country-region-link">
+                      <span class="country-region-name">{r.name}</span>
+                      {r.type && <span class="country-region-type">{r.type}</span>}
+                    </div>
+                  )}
+
+                  {r.summary && (
+                    <p class="country-region-summary">{r.summary}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {meta.keyCities && meta.keyCities.length > 0 && (
+          <section class="object-block">
+            <h3 class="object-block-title">Villes majeures</h3>
+            <ul class="country-city-list">
+              {meta.keyCities.map((c) => (
+                <li class="country-city-item">
+                  {c.link ? (
+                    <a href={c.link} class="country-city-link">
+                      <span class="country-city-name">{c.name}</span>
+                      {c.importance && (
+                        <span class="country-city-importance">{c.importance}</span>
+                      )}
+                    </a>
+                  ) : (
+                    <div class="country-city-link">
+                      <span class="country-city-name">{c.name}</span>
+                      {c.importance && (
+                        <span class="country-city-importance">{c.importance}</span>
+                      )}
+                    </div>
+                  )}
+
+                  {c.summary && (
+                    <p class="country-city-summary">{c.summary}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
+
+    {hasMapData && (
+      <section class="object-block country-map-block">
+        <h3 class="object-block-title">Carte interactive</h3>
+        <p class="country-map-intro">
+          Cette carte simplifiée permet de naviguer rapidement entre les régions
+          et les villes importantes du pays.
+        </p>
+
+        <div class="country-map-layout">
+          <div class="country-map-main">
+            {meta.regions && (
+              <div class="country-map-section">
+                <h4>Régions</h4>
+                <div class="country-map-chips">
+                  {meta.regions.map((r) => (
+                    <a
+                      href={r.link || "#"}
+                      class={"country-chip" + (!r.link ? " is-disabled" : "")}
+                    >
+                      {r.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {meta.keyCities && (
+              <div class="country-map-section">
+                <h4>Villes majeures</h4>
+                <div class="country-map-chips">
+                  {meta.keyCities.map((c) => (
+                    <a
+                      href={c.link || "#"}
+                      class={"country-chip" + (!c.link ? " is-disabled" : "")}
+                    >
+                      {c.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <aside class="country-map-aside">
+            <p class="country-map-note">
+              Tu pourras remplacer ce bloc plus tard par une vraie carte SVG avec
+              zones cliquables. Pour l’instant, il sert juste de hub rapide.
+            </p>
+          </aside>
+        </div>
+      </section>
+    )}
+  </section>
+</CountryLayout>

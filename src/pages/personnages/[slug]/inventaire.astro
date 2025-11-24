@@ -1,0 +1,290 @@
+---
+import CharacterLayout from "../../../layouts/CharacterLayout.astro";
+
+interface MetaPersonnage {
+  name: string;
+  title?: string;
+  role?: string;
+  tag?: string;
+  arc?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
+type Rarity = "commun" | "rare" | "precieux" | "relique" | string;
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  icon?: string;
+  image?: string;
+  description?: string;
+  category?: string;
+  rarity?: Rarity;
+  note?: string;
+}
+
+interface InventoryData {
+  items: InventoryItem[];
+}
+
+interface Props {
+  meta: MetaPersonnage;
+  slug: string;
+  inventory: InventoryData | null;
+}
+
+const { meta, slug, inventory } = Astro.props as Props;
+const basePath = `/personnages/${slug}`;
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
+  const inventoryModules = import.meta.glob(
+    "../../../data/personnages/*/inventaire.json"
+  );
+
+  const inventoryMap: Record<string, InventoryData> = {};
+
+  await Promise.all(
+    Object.entries(inventoryModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as InventoryData;
+
+      const match = path.match(/personnages\/([^/]+)\/inventaire\.json$/);
+      const s = match ? match[1] : "";
+      if (s) inventoryMap[s] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MetaPersonnage;
+
+      const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          meta: data,
+          slug: s,
+          inventory: inventoryMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const items = inventory?.items ?? [];
+---
+
+<CharacterLayout
+  name={meta.name}
+  subtitle={meta.title || meta.role}
+  tag={meta.tag}
+  arc={meta.arc}
+  basePath={basePath}
+  currentSection="inventaire"
+>
+  <section class="card">
+    <h3 class="page-title" style="margin-left:0;">Inventaire</h3>
+    <p class="page-subtitle" style="margin-left:0;">
+      Objets que {meta.name} garde sur elle ou ne quitte presque jamais. Certains
+      sont anodins, d’autres portent plus de poids qu’ils ne le devraient.
+    </p>
+
+    {items.length === 0 && (
+      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+        Aucun objet n’a encore été enregistré pour ce personnage. Ajoute une
+        liste dans
+        <code>src/data/personnages/{slug}/inventaire.json</code>.
+      </p>
+    )}
+
+    {items.length > 0 && (
+      <div class="inventory-layout">
+        {/* GRID DES OBJETS */}
+        <div class="inventory-grid">
+          {items.map((item) => {
+            const iconPath =
+              item.icon || `/personnages/${slug}/items/${item.id}.png`;
+            const imagePath =
+              item.image || iconPath;
+
+            return (
+              <button
+                type="button"
+                class="inventory-item"
+                data-item-id={item.id}
+                data-item-name={item.name}
+                data-item-desc={item.description || ""}
+                data-item-image={imagePath}
+                data-item-category={item.category || ""}
+                data-item-rarity={item.rarity || ""}
+                data-item-note={item.note || ""}
+              >
+                <div class="inventory-icon">
+                  <img
+                    src={iconPath}
+                    alt={item.name}
+                    loading="lazy"
+                  />
+                </div>
+                <div class="inventory-labels">
+                  <span class="inventory-item-name">
+                    {item.name}
+                  </span>
+
+                  <div class="inventory-item-meta">
+                    {item.category && (
+                      <span class="inventory-pill inventory-pill-category">
+                        {item.category}
+                      </span>
+                    )}
+                    {item.rarity && (
+                      <span class={`inventory-pill inventory-pill-rarity rarity-${item.rarity}`}>
+                        {item.rarity}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* LIGHTBOX / MODAL */}
+        <div class="inventory-lightbox" data-inventory-modal hidden>
+          <div class="inventory-lightbox-backdrop" data-inventory-close></div>
+          <div class="inventory-lightbox-content">
+            <button
+              class="inventory-lightbox-close"
+              type="button"
+              data-inventory-close
+              aria-label="Fermer"
+            >
+              ×
+            </button>
+
+            <div class="inventory-lightbox-body">
+              <div class="inventory-lightbox-image-wrap">
+                <img
+                  src=""
+                  alt=""
+                  data-inventory-modal-image
+                />
+              </div>
+
+              <div class="inventory-lightbox-text">
+                <h4 class="inventory-lightbox-title" data-inventory-modal-name>
+                  Nom de l’objet
+                </h4>
+
+                <div class="inventory-lightbox-meta">
+                  <span
+                    class="inventory-pill inventory-pill-category"
+                    data-inventory-modal-category
+                  ></span>
+                  <span
+                    class="inventory-pill inventory-pill-rarity"
+                    data-inventory-modal-rarity
+                  ></span>
+                </div>
+
+                <p
+                  class="inventory-lightbox-desc"
+                  data-inventory-modal-desc
+                ></p>
+
+                <p
+                  class="inventory-lightbox-note"
+                  data-inventory-modal-note
+                ></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </section>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const modal = document.querySelector("[data-inventory-modal]");
+      if (!modal) return;
+
+      const imgEl = modal.querySelector("[data-inventory-modal-image]");
+      const nameEl = modal.querySelector("[data-inventory-modal-name]");
+      const catEl = modal.querySelector("[data-inventory-modal-category]");
+      const rarEl = modal.querySelector("[data-inventory-modal-rarity]");
+      const descEl = modal.querySelector("[data-inventory-modal-desc]");
+      const noteEl = modal.querySelector("[data-inventory-modal-note]");
+
+      function openModal(button) {
+        const image = button.dataset.itemImage || "";
+        const name = button.dataset.itemName || "";
+        const category = button.dataset.itemCategory || "";
+        const rarity = button.dataset.itemRarity || "";
+        const desc = button.dataset.itemDesc || "";
+        const note = button.dataset.itemNote || "";
+
+        if (imgEl instanceof HTMLImageElement) {
+          imgEl.src = image;
+          imgEl.alt = name;
+        }
+        if (nameEl) nameEl.textContent = name;
+
+        if (catEl) {
+          catEl.textContent = category;
+          catEl.style.display = category ? "inline-flex" : "none";
+        }
+
+        if (rarEl) {
+          rarEl.textContent = rarity;
+          rarEl.style.display = rarity ? "inline-flex" : "none";
+        }
+
+        if (descEl) descEl.textContent = desc || "Aucune description détaillée.";
+        if (noteEl) {
+          noteEl.textContent = note || "";
+          noteEl.style.display = note ? "block" : "none";
+        }
+
+        modal.classList.add("is-open");
+        modal.removeAttribute("hidden");
+        document.body.classList.add("inventory-modal-open");
+      }
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("hidden", "true");
+        document.body.classList.remove("inventory-modal-open");
+      }
+
+      modal.addEventListener("click", (e) => {
+        const target = e.target;
+        if (
+          target instanceof HTMLElement &&
+          target.matches("[data-inventory-close]")
+        ) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      document
+        .querySelectorAll<HTMLButtonElement>(".inventory-item")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => openModal(btn));
+        });
+    });
+  </script>
+</CharacterLayout>

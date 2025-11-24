@@ -1,0 +1,114 @@
+---
+import ObjectLayout from "@layouts/ObjectLayout.astro";
+
+interface OrigineData {
+  creationContext?: string;
+  materials?: string;
+  craftingTechnique?: string;
+  initialOwner?: string;
+  historyOfUse?: string[];
+  manufacturingAnecdotes?: string[];
+}
+
+interface Props {
+  slug: string;
+  origine: OrigineData | null;
+}
+
+const { slug, origine } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("@data/objets/*/origine.json");
+
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as OrigineData;
+
+      const match = path.match(/objets\/([^/]+)\/origine\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: {
+          slug,
+          origine: json
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/objets/${slug}`;
+---
+
+<ObjectLayout
+  name="Origine & fabrication"
+  basePath={basePath}
+  currentSection="origine"
+>
+  <section class="object-section">
+    <h2 class="section-title">Origine & fabrication</h2>
+
+    {origine?.creationContext && (
+      <p class="object-summary">{origine.creationContext}</p>
+    )}
+
+    {!origine && (
+      <p class="object-empty">
+        Aucun fichier <code>origine.json</code> trouvé.<br />
+        Chemin attendu : <code>src/data/objets/{slug}/origine.json</code>.
+      </p>
+    )}
+
+    {origine && (
+      <div class="object-origin-grid">
+        {origine.materials && (
+          <article class="object-origin-block">
+            <h3>Matériaux</h3>
+            <p>{origine.materials}</p>
+          </article>
+        )}
+
+        {origine.craftingTechnique && (
+          <article class="object-origin-block">
+            <h3>Technique de fabrication</h3>
+            <p>{origine.craftingTechnique}</p>
+          </article>
+        )}
+
+        {origine.initialOwner && (
+          <article class="object-origin-block">
+            <h3>Premier propriétaire</h3>
+            <p>{origine.initialOwner}</p>
+          </article>
+        )}
+
+        {origine.historyOfUse && origine.historyOfUse.length > 0 && (
+          <article class="object-origin-block">
+            <h3>Histoire de l’usage</h3>
+            <ul>
+              {origine.historyOfUse.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </article>
+        )}
+
+        {origine.manufacturingAnecdotes &&
+          origine.manufacturingAnecdotes.length > 0 && (
+            <article class="object-origin-block">
+              <h3>Anecdotes de fabrication</h3>
+              <ul>
+                {origine.manufacturingAnecdotes.map((a) => (
+                  <li>{a}</li>
+                ))}
+              </ul>
+            </article>
+          )}
+      </div>
+    )}
+  </section>
+</ObjectLayout>

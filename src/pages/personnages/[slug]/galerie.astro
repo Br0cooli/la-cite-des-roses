@@ -1,0 +1,366 @@
+---
+import CharacterLayout from "../../../layouts/CharacterLayout.astro";
+
+interface MetaPersonnage {
+  name: string;
+  title?: string;
+  role?: string;
+  tag?: string;
+  arc?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
+interface GalleryItem {
+  id: string;
+  title: string;
+  image: string;
+  description?: string;
+  kind?: string;      // "Turnaround", "Expressions", "Props", "Illustration", "Planche", etc.
+  year?: string;
+  note?: string;
+}
+
+interface GalleryData {
+  conceptArt?: GalleryItem[];
+  museum?: GalleryItem[];
+}
+
+interface Props {
+  meta: MetaPersonnage;
+  slug: string;
+  gallery: GalleryData | null;
+}
+
+const { meta, slug, gallery } = Astro.props as Props;
+const basePath = `/personnages/${slug}`;
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
+  const galleryModules = import.meta.glob(
+    "../../../data/personnages/*/galerie.json"
+  );
+
+  const galleryMap: Record<string, GalleryData> = {};
+
+  await Promise.all(
+    Object.entries(galleryModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as GalleryData;
+
+      const match = path.match(/personnages\/([^/]+)\/galerie\.json$/);
+      const s = match ? match[1] : "";
+      if (s) galleryMap[s] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MetaPersonnage;
+
+      const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          meta: data,
+          slug: s,
+          gallery: galleryMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const conceptArt = gallery?.conceptArt ?? [];
+const museum = gallery?.museum ?? [];
+---
+
+<CharacterLayout
+  name={meta.name}
+  subtitle={meta.title || meta.role}
+  tag={meta.tag}
+  arc={meta.arc}
+  basePath={basePath}
+  currentSection="galerie"
+>
+  <section class="card">
+    <h3 class="page-title" style="margin-left:0;">Galerie</h3>
+    <p class="page-subtitle" style="margin-left:0;">
+      Études, recherches et œuvres finies autour de {meta.name}. De la silhouette
+      griffonnée aux tableaux dignes d’une galerie royale.
+    </p>
+
+    {!gallery && (
+      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+        Aucune galerie n’a encore été définie pour ce personnage. Tu peux créer un
+        fichier
+        <code>src/data/personnages/{slug}/galerie.json</code> pour activer cette page.
+      </p>
+    )}
+
+    {gallery && (
+      <div class="gallery-layout">
+        {/* SECTION CONCEPT ART */}
+        {conceptArt.length > 0 && (
+          <section class="gallery-section">
+            <header class="gallery-section-header">
+              <h4 class="gallery-section-title">Concept art</h4>
+              <p class="gallery-section-subtitle">
+                Turnarounds, planches d’expressions, études de costumes et de
+                props qui ont façonné le design de {meta.name}.
+              </p>
+            </header>
+
+            <div class="gallery-grid">
+              {conceptArt.map((item) => (
+                <button
+                  type="button"
+                  class="gallery-thumb"
+                  data-gallery-image={item.image}
+                  data-gallery-title={item.title}
+                  data-gallery-kind={item.kind || ""}
+                  data-gallery-year={item.year || ""}
+                  data-gallery-desc={item.description || ""}
+                  data-gallery-note={item.note || ""}
+                >
+                  <div class="gallery-thumb-image-wrap">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      loading="lazy"
+                    />
+                  </div>
+                  <div class="gallery-thumb-info">
+                    <div class="gallery-thumb-line1">
+                      <span class="gallery-thumb-title">{item.title}</span>
+                      {item.kind && (
+                        <span class="gallery-pill gallery-pill-kind">
+                          {item.kind}
+                        </span>
+                      )}
+                    </div>
+                    {(item.year || item.note) && (
+                      <div class="gallery-thumb-meta">
+                        {item.year && (
+                          <span class="gallery-meta-year">{item.year}</span>
+                        )}
+                        {item.note && (
+                          <span class="gallery-meta-note">
+                            {item.note}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* SECTION MUSEE / ILLUSTRATIONS */}
+        {museum.length > 0 && (
+          <section class="gallery-section">
+            <header class="gallery-section-header">
+              <h4 class="gallery-section-title">Musée</h4>
+              <p class="gallery-section-subtitle">
+                Illustrations, tableaux et planches qui montrent {meta.name} dans
+                des scènes clés ou des moments de vie.
+              </p>
+            </header>
+
+            <div class="gallery-grid gallery-grid-museum">
+              {museum.map((item) => (
+                <button
+                  type="button"
+                  class="gallery-thumb gallery-thumb-large"
+                  data-gallery-image={item.image}
+                  data-gallery-title={item.title}
+                  data-gallery-kind={item.kind || ""}
+                  data-gallery-year={item.year || ""}
+                  data-gallery-desc={item.description || ""}
+                  data-gallery-note={item.note || ""}
+                >
+                  <div class="gallery-thumb-image-wrap">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      loading="lazy"
+                    />
+                  </div>
+                  <div class="gallery-thumb-info">
+                    <div class="gallery-thumb-line1">
+                      <span class="gallery-thumb-title">{item.title}</span>
+                      {item.kind && (
+                        <span class="gallery-pill gallery-pill-kind">
+                          {item.kind}
+                        </span>
+                      )}
+                    </div>
+                    {(item.year || item.note) && (
+                      <div class="gallery-thumb-meta">
+                        {item.year && (
+                          <span class="gallery-meta-year">{item.year}</span>
+                        )}
+                        {item.note && (
+                          <span class="gallery-meta-note">
+                            {item.note}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {conceptArt.length === 0 && museum.length === 0 && (
+          <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+            La galerie existe, mais elle est encore vide. Ajoute des entrées dans
+            <code>galerie.json</code> pour afficher les images.
+          </p>
+        )}
+
+        {/* LIGHTBOX */}
+        <div class="gallery-lightbox" data-gallery-modal hidden>
+          <div class="gallery-lightbox-backdrop" data-gallery-close></div>
+          <div class="gallery-lightbox-content">
+            <button
+              class="gallery-lightbox-close"
+              type="button"
+              data-gallery-close
+              aria-label="Fermer"
+            >
+              ×
+            </button>
+
+            <div class="gallery-lightbox-body">
+              <div class="gallery-lightbox-image-wrap">
+                <img
+                  src=""
+                  alt=""
+                  data-gallery-modal-image
+                />
+              </div>
+
+              <div class="gallery-lightbox-text">
+                <h4 class="gallery-lightbox-title" data-gallery-modal-title>
+                  Titre de l’image
+                </h4>
+
+                <div class="gallery-lightbox-meta">
+                  <span
+                    class="gallery-pill gallery-pill-kind"
+                    data-gallery-modal-kind
+                  ></span>
+                  <span
+                    class="gallery-meta-year"
+                    data-gallery-modal-year
+                  ></span>
+                </div>
+
+                <p
+                  class="gallery-lightbox-desc"
+                  data-gallery-modal-desc
+                ></p>
+
+                <p
+                  class="gallery-lightbox-note"
+                  data-gallery-modal-note
+                ></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </section>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const modal = document.querySelector("[data-gallery-modal]");
+      if (!modal) return;
+
+      const imgEl = modal.querySelector("[data-gallery-modal-image]");
+      const titleEl = modal.querySelector("[data-gallery-modal-title]");
+      const kindEl = modal.querySelector("[data-gallery-modal-kind]");
+      const yearEl = modal.querySelector("[data-gallery-modal-year]");
+      const descEl = modal.querySelector("[data-gallery-modal-desc]");
+      const noteEl = modal.querySelector("[data-gallery-modal-note]");
+
+      function openModal(btn) {
+        const image = btn.dataset.galleryImage || "";
+        const title = btn.dataset.galleryTitle || "";
+        const kind = btn.dataset.galleryKind || "";
+        const year = btn.dataset.galleryYear || "";
+        const desc = btn.dataset.galleryDesc || "";
+        const note = btn.dataset.galleryNote || "";
+
+        if (imgEl instanceof HTMLImageElement) {
+          imgEl.src = image;
+          imgEl.alt = title;
+        }
+
+        if (titleEl) titleEl.textContent = title;
+
+        if (kindEl) {
+          kindEl.textContent = kind;
+          (kindEl as HTMLElement).style.display = kind ? "inline-flex" : "none";
+        }
+
+        if (yearEl) {
+          yearEl.textContent = year;
+          (yearEl as HTMLElement).style.display = year ? "inline-flex" : "none";
+        }
+
+        if (descEl) {
+          descEl.textContent = desc || "Aucune description n’a été ajoutée.";
+        }
+
+        if (noteEl) {
+          noteEl.textContent = note || "";
+          (noteEl as HTMLElement).style.display = note ? "block" : "none";
+        }
+
+        modal.classList.add("is-open");
+        modal.removeAttribute("hidden");
+        document.body.classList.add("gallery-modal-open");
+      }
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("hidden", "true");
+        document.body.classList.remove("gallery-modal-open");
+      }
+
+      modal.addEventListener("click", (e) => {
+        const target = e.target;
+        if (
+          target instanceof HTMLElement &&
+          target.matches("[data-gallery-close]")
+        ) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      document
+        .querySelectorAll<HTMLButtonElement>(".gallery-thumb")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => openModal(btn));
+        });
+    });
+  </script>
+</CharacterLayout>

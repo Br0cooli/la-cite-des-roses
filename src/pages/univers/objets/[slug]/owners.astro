@@ -1,0 +1,183 @@
+---
+import ObjectLayout from "@layouts/ObjectLayout.astro";
+
+interface OwnerTimelineEntry {
+  name: string;
+  role?: string;
+  period?: string;
+  relationToObject?: string;
+  notes?: string;
+}
+
+interface TransferEntry {
+  title: string;
+  description: string;
+}
+
+interface PossesseursData {
+  currentOwner?: string;
+  currentStatus?: string;
+  originOwner?: string;
+  originOwnerRelation?: string;
+  originTransfer?: string;
+  ownersTimeline?: OwnerTimelineEntry[];
+  notableTransfers?: TransferEntry[];
+  symbolicOwnership?: string;
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  possesseurs: PossesseursData | null;
+}
+
+const { slug, possesseurs } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("@data/objets/*/owners.json");
+
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as PossesseursData;
+
+      const match = path.match(/objets\/([^/]+)\/owners\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: { slug, possesseurs: json }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/objets/${slug}`;
+---
+
+<ObjectLayout
+  name="Possesseurs"
+  basePath={basePath}
+  currentSection="owners"
+>
+  <section class="object-section">
+    <h2 class="section-title">Possesseurs & transmission</h2>
+
+    {possesseurs?.currentStatus && (
+      <p class="object-summary">{possesseurs.currentStatus}</p>
+    )}
+
+    {!possesseurs && (
+      <p class="object-empty">
+        Aucun fichier <code>possesseurs.json</code> trouvé.<br />
+        Chemin attendu : <code>src/data/objets/{slug}/possesseurs.json</code>.
+      </p>
+    )}
+
+    {possesseurs && (
+      <div class="object-owners-grid">
+        <div class="object-owners-main">
+          {possesseurs.currentOwner && (
+            <article class="object-block">
+              <h3 class="object-block-title">Possesseur actuel</h3>
+              <p><strong>{possesseurs.currentOwner}</strong></p>
+              {possesseurs.currentStatus && <p>{possesseurs.currentStatus}</p>}
+            </article>
+          )}
+
+          {(possesseurs.originOwner ||
+            possesseurs.originOwnerRelation ||
+            possesseurs.originTransfer) && (
+            <article class="object-block">
+              <h3 class="object-block-title">Origine de la possession</h3>
+
+              {possesseurs.originOwner && (
+                <p>
+                  <strong>Premier possesseur :</strong> {possesseurs.originOwner}
+                </p>
+              )}
+
+              {possesseurs.originOwnerRelation && (
+                <p>{possesseurs.originOwnerRelation}</p>
+              )}
+
+              {possesseurs.originTransfer && (
+                <p>{possesseurs.originTransfer}</p>
+              )}
+            </article>
+          )}
+
+          {possesseurs.symbolicOwnership && (
+            <article class="object-block">
+              <h3 class="object-block-title">Dimension symbolique</h3>
+              <p>{possesseurs.symbolicOwnership}</p>
+            </article>
+          )}
+
+          {possesseurs.notes && possesseurs.notes.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {possesseurs.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </article>
+          )}
+        </div>
+
+        <aside class="object-owners-aside">
+          {possesseurs.ownersTimeline &&
+            possesseurs.ownersTimeline.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Lignée des possesseurs</h3>
+
+                <ol class="object-owners-timeline">
+                  {possesseurs.ownersTimeline.map((o) => (
+                    <li class="object-owner-entry">
+                      <div class="object-owner-header">
+                        <span class="object-owner-name">{o.name}</span>
+                        {o.period && (
+                          <span class="object-owner-period">{o.period}</span>
+                        )}
+                      </div>
+
+                      {o.role && (
+                        <p class="object-owner-role">{o.role}</p>
+                      )}
+
+                      {o.relationToObject && (
+                        <p class="object-owner-relation">{o.relationToObject}</p>
+                      )}
+
+                      {o.notes && (
+                        <p class="object-owner-notes">{o.notes}</p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+
+          {possesseurs.notableTransfers &&
+            possesseurs.notableTransfers.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Moments de transmission</h3>
+
+                <ul class="object-transfers-list">
+                  {possesseurs.notableTransfers.map((t) => (
+                    <li class="object-transfer-entry">
+                      <p class="object-transfer-title">{t.title}</p>
+                      <p class="object-transfer-desc">{t.description}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+        </aside>
+      </div>
+    )}
+  </section>
+</ObjectLayout>

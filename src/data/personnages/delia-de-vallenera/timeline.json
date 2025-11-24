@@ -1,0 +1,34 @@
+{
+  "events": [
+    {
+      "period": "Enfance",
+      "when": "0 ans",
+      "label": "Naissance sous l'orage",
+      "description": "Delia vient au monde lors d'une nuit d'orage, aussitôt brandie comme héritière alors que personne ne lui explique pourquoi la reine refuse de la toucher."
+    },
+    {
+      "period": "Enfance",
+      "when": "7 ans",
+      "label": "Premiers soupçons",
+      "description": "Elle surprend une dispute entre la reine et le roi au sujet d'une 'erreur qu'on ne pourra jamais effacer'. La phrase s'imprime et ne la quittera plus."
+    },
+    {
+      "period": "Adolescence",
+      "when": "16 ans",
+      "label": "Les archives interdites",
+      "description": "En fouillant des registres qu'elle n'était pas censée voir, Delia note des incohérences dans les naissances de l'année de sa venue au monde."
+    },
+    {
+      "period": "Jeunesse",
+      "when": "20 ans",
+      "label": "Rencontre avec Léandre",
+      "description": "Le nouveau garde, trop sincère pour la cour, devient peu à peu son point fixe dans un palais où tout le monde semble jouer un rôle."
+    },
+    {
+      "period": "Début de l'histoire",
+      "when": "Présent",
+      "label": "La fissure",
+      "description": "Un détail de plus vient tout faire basculer : un nom, un visage ou un document qui relie enfin ses intuitions à une vérité monstrueuse."
+    }
+  ]
+}

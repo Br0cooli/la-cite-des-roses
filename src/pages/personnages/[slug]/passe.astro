@@ -1,0 +1,183 @@
+---
+import CharacterLayout from "../../../layouts/CharacterLayout.astro";
+
+interface MetaPersonnage {
+  name: string;
+  title?: string;
+  role?: string;
+  tag?: string;
+  arc?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
+interface PassePhase {
+  id?: string;
+  title: string;
+  period?: string;
+  text: string;
+}
+
+interface PasseEvent {
+  year?: string;
+  label?: string;
+  title: string;
+  description?: string;
+}
+
+interface PasseData {
+  overview?: string;
+  phases?: PassePhase[];
+  keyEvents?: PasseEvent[];
+}
+
+interface Props {
+  meta: MetaPersonnage;
+  slug: string;
+  passe: PasseData | null;
+}
+
+const { meta, slug, passe } = Astro.props as Props;
+const basePath = `/personnages/${slug}`;
+
+// ROUTE DYNAMIQUE : une page /passe par personnage
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
+  const passeModules = import.meta.glob("../../../data/personnages/*/passe.json");
+
+  const passeMap: Record<string, PasseData> = {};
+
+  await Promise.all(
+    Object.entries(passeModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as PasseData;
+
+      const match = path.match(/personnages\/([^/]+)\/passe\.json$/);
+      const s = match ? match[1] : "";
+      if (s) passeMap[s] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MetaPersonnage;
+
+      const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          meta: data,
+          slug: s,
+          passe: passeMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+---
+
+<CharacterLayout
+  name={meta.name}
+  subtitle={meta.title || meta.role}
+  tag={meta.tag}
+  arc={meta.arc}
+  basePath={basePath}
+  currentSection="passe"
+>
+  <section class="card">
+    <h3 class="page-title" style="margin-left:0;">Passé</h3>
+    <p class="page-subtitle" style="margin-left:0;">
+      Parcours de {meta.name}&nbsp;: enfance, fractures, ascension et cicatrices
+      qui expliquent sa façon d’agir dans le récit.
+    </p>
+
+    {passe ? (
+      <div class="passe-layout">
+        {/* COLONNE PRINCIPALE : GRANDES PÉRIODES */}
+        <div class="passe-main">
+          {passe.overview && (
+            <div class="passe-overview">
+              <h4>Résumé général</h4>
+              <p>{passe.overview}</p>
+            </div>
+          )}
+
+          {passe.phases && passe.phases.length > 0 && (
+            <div class="passe-phases">
+              {passe.phases.map((phase) => (
+                <article class="passe-phase">
+                  <div class="passe-phase-header">
+                    {phase.period && (
+                      <span class="passe-phase-period">
+                        {phase.period}
+                      </span>
+                    )}
+                    <h4 class="passe-phase-title">{phase.title}</h4>
+                  </div>
+                  <p class="passe-phase-text">
+                    {phase.text}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* COLONNE LATERALE : REPÈRES & MOMENTS-CLÉS */}
+        <aside class="passe-side">
+          <div class="passe-side-block">
+            <h4>Repères chronologiques</h4>
+
+            {passe.keyEvents && passe.keyEvents.length > 0 ? (
+              <ul class="passe-events-list">
+                {passe.keyEvents.map((evt) => (
+                  <li class="passe-event-item">
+                    <div class="passe-event-header">
+                      {evt.year && (
+                        <span class="passe-event-year">
+                          {evt.year}
+                        </span>
+                      )}
+                      <span class="passe-event-title">
+                        {evt.title}
+                      </span>
+                    </div>
+                    {evt.description && (
+                      <p class="passe-event-desc">
+                        {evt.description}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="passe-side-empty">
+                Tu peux renseigner des moments-clés dans
+                <code>passe.json</code> (clé <code>keyEvents</code>).
+              </p>
+            )}
+          </div>
+
+          <div class="passe-side-note">
+            <p>
+              Utilise cette page pour garder en tête les blessures fondatrices,
+              les loyautés anciennes et les bascules qui motivent {meta.name}
+              dans l’histoire principale.
+            </p>
+          </div>
+        </aside>
+      </div>
+    ) : (
+      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+        Aucun passé détaillé n’a encore été défini pour ce personnage. Tu peux
+        créer un fichier
+        <code>src/data/personnages/{slug}/passe.json</code> pour activer cette page.
+      </p>
+    )}
+  </section>
+</CharacterLayout>

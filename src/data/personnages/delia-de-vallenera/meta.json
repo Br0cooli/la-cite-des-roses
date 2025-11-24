@@ -1,0 +1,24 @@
+{
+  "name": "Delia de Vallenera",
+  "title": "Princesse bâtarde devenue reine",
+  "role": "Protagoniste principale",
+  "tag": "Royaume d'Aureval",
+  "arc": "L’Ascension du Lys Blanc",
+  "avatar": "/personnages/delia-de-vallenera/portrait.png",
+  "resume": "Héritière illégitime du trône, prise entre la loyauté, la honte et une soif de justice qu’on a longtemps étouffée.",
+
+  "age": 23,
+  "birthPlace": "Palais d’Aureval",
+  "socialOrigin": "Noblesse — lignée royale illégitime",
+  "maritalStatus": "Mariée à Aloïs (union politique)",
+  "occupation": "Princesse héritière puis reine",
+  "nationality": "Couronne d’Aureval",
+  "languages": ["Langue commune", "Parler des cours du sud"],
+  "religion": "Foi officielle du royaume (observée plus par devoir que par conviction)",
+  "traits": [
+    "résiliente",
+    "susceptible",
+    "contrôlée en façade",
+    "obsédée par la vérité"
+  ]
+}

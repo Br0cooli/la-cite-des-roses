@@ -1,0 +1,221 @@
+---
+import ObjectLayout from "@layouts/ObjectLayout.astro";
+
+interface MetaObjet {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  owner?: string;
+  origin?: string;
+  rarity?: string;
+  image?: string;
+}
+
+interface ObjectKeyMoment {
+  title: string;
+  era?: string;
+  description: string;
+}
+
+interface GeneralData {
+  summary?: string;
+  description?: string;
+  physicalDescription?: string;
+  symbolism?: string;
+  emotionalValue?: string;
+  inStoryRole?: string;
+  tags?: string[];
+  keyMoments?: ObjectKeyMoment[];
+  notes?: string[];
+}
+
+interface Props {
+  meta: MetaObjet;
+  slug: string;
+  general: GeneralData | null;
+}
+
+const { meta, slug, general } = Astro.props as Props;
+const basePath = `/univers/objets/${slug}`;
+
+// Petit helper pour savoir si le JSON est vraiment vide
+const generalIsEmpty =
+  !general ||
+  Object.values(general).every((v) => {
+    if (Array.isArray(v)) return v.length === 0;
+    if (typeof v === "string") return v.trim() === "";
+    return v == null;
+  });
+
+export async function getStaticPaths() {
+  // On charge tous les meta.json d’objets
+  const metaModules = import.meta.glob("@data/objets/*/meta.json");
+  // On charge tous les general.json d’objets
+  const generalModules = import.meta.glob("@data/objets/*/general.json");
+
+  const generalMap: Record<string, GeneralData> = {};
+
+  // On construit une map slug -> general.json
+  await Promise.all(
+    Object.entries(generalModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as GeneralData;
+      const match = path.match(/objets\/([^/]+)\/general\.json$/);
+      const slug = match?.[1] ?? "";
+      if (slug) {
+        generalMap[slug] = json;
+      }
+    })
+  );
+
+  // Pour chaque meta.json, on génère une page
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as MetaObjet;
+      const match = path.match(/objets\/([^/]+)\/meta\.json$/);
+      const slug = match?.[1] ?? "";
+
+      if (!slug) return null;
+
+      return {
+        params: { slug },
+        props: {
+          meta: json,
+          slug,
+          general: generalMap[slug] ?? null,
+        },
+      };
+    })
+  );
+
+  // On enlève les null au cas où
+  return entries.filter(Boolean) as {
+    params: { slug: string };
+    props: Props;
+  }[];
+}
+---
+
+<ObjectLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  owner={meta.owner}
+  origin={meta.origin}
+  rarity={meta.rarity}
+  image={meta.image}
+  basePath={basePath}
+  currentSection="general"
+>
+  <section class="object-section">
+    <h2 class="section-title">Présentation générale</h2>
+
+    {general && general.summary && (
+      <p class="object-summary">
+        {general.summary}
+      </p>
+    )}
+
+    {(!general || generalIsEmpty) && (
+      <p class="object-empty">
+        Aucun contenu trouvé dans <code>general.json</code> pour cet objet.<br />
+        Vérifie que le fichier existe bien ici :
+        <br />
+        <code>src/data/objets/{slug}/general.json</code>.
+      </p>
+    )}
+
+    {!generalIsEmpty && (
+      <div class="object-general-grid">
+        {/* Colonne principale */}
+        <div class="object-general-main">
+          {general?.description && (
+            <article class="object-block">
+              <h3 class="object-block-title">Description</h3>
+              <p>{general.description}</p>
+            </article>
+          )}
+
+          {general?.physicalDescription && (
+            <article class="object-block">
+              <h3 class="object-block-title">Apparence</h3>
+              <p>{general.physicalDescription}</p>
+            </article>
+          )}
+
+          {general?.symbolism && (
+            <article class="object-block">
+              <h3 class="object-block-title">Symbolique</h3>
+              <p>{general.symbolism}</p>
+            </article>
+          )}
+
+          {general?.emotionalValue && (
+            <article class="object-block">
+              <h3 class="object-block-title">Valeur émotionnelle</h3>
+              <p>{general.emotionalValue}</p>
+            </article>
+          )}
+
+          {general?.inStoryRole && (
+            <article class="object-block">
+              <h3 class="object-block-title">Rôle dans l’histoire</h3>
+              <p>{general.inStoryRole}</p>
+            </article>
+          )}
+        </div>
+
+        {/* Colonne latérale */}
+        <aside class="object-general-aside">
+          {general?.tags && general.tags.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Mots-clés</h3>
+              <div class="object-tags">
+                {general.tags.map((tag) => (
+                  <span class="object-tag">{tag}</span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {general?.keyMoments && general.keyMoments.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Moments clés</h3>
+              <ol class="object-key-moments">
+                {general.keyMoments.map((moment) => (
+                  <li class="object-key-moment">
+                    <div class="object-key-moment-header">
+                      <span class="object-key-moment-title">
+                        {moment.title}
+                      </span>
+                      {moment.era && (
+                        <span class="object-key-moment-era">
+                          {moment.era}
+                        </span>
+                      )}
+                    </div>
+                    <p class="object-key-moment-desc">
+                      {moment.description}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {general?.notes && general.notes.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {general.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
+    )}
+  </section>
+</ObjectLayout>

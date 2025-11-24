@@ -1,0 +1,421 @@
+---
+import CountryLayout from "@layouts/CountryLayout.astro";
+
+interface PowerStructure {
+  description?: string;
+  headOfState?: string;
+  headOfGovernment?: string;
+  legitimacyBasis?: string;
+  decisionProcess?: string;
+}
+
+interface Institution {
+  name: string;
+  type?: string;
+  role?: string;
+  composition?: string;
+  seat?: string;
+}
+
+interface Faction {
+  name: string;
+  type?: string;
+  goal?: string;
+  methods?: string;
+  influenceZone?: string;
+}
+
+interface DiplomaticRelation {
+  partner: string;
+  nature?: string;
+  summary?: string;
+}
+
+interface InternalTension {
+  name: string;
+  type?: string;
+  description?: string;
+  stakes?: string;
+}
+
+interface LawOrCustom {
+  name: string;
+  type?: string;
+  description?: string;
+  impact?: string;
+}
+
+interface PoliticalEvent {
+  title: string;
+  era?: string;
+  description?: string;
+  consequences?: string;
+}
+
+interface PoliticsData {
+  powerStructure?: PowerStructure;
+  keyInstitutions?: Institution[];
+  factions?: Faction[];
+  diplomaticRelations?: DiplomaticRelation[];
+  internalTensions?: InternalTension[];
+  lawsAndCustoms?: LawOrCustom[];
+  timeline?: PoliticalEvent[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  politics: PoliticsData | null;
+}
+
+const { slug, politics } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("@data/lieux/pays/*/politique.json");
+
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as PoliticsData;
+
+      const match = path.match(/pays\/([^/]+)\/politique\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: { slug, politics: json }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/lieux/pays/${slug}`;
+const hasMap =
+  !!(politics?.keyInstitutions && politics.keyInstitutions.length > 0) ||
+  !!(politics?.factions && politics.factions.length > 0);
+---
+
+<CountryLayout
+  name="Politique & pouvoir"
+  basePath={basePath}
+  currentSection="politique"
+>
+  <section class="object-section">
+    <h2 class="section-title">Politique & structures de pouvoir</h2>
+
+    {!politics && (
+      <p class="object-empty">
+        Aucun fichier <code>politique.json</code> trouvé.<br />
+        Chemin attendu : <code>src/data/lieux/pays/{slug}/politique.json</code>.
+      </p>
+    )}
+
+    {politics && (
+      <>
+        <div class="country-general-grid">
+          {/* Colonne principale : architecture du pouvoir */}
+          <div class="country-main">
+            {politics.powerStructure && (
+              <article class="object-block">
+                <h3 class="object-block-title">Architecture du pouvoir</h3>
+
+                <dl class="politics-facts">
+                  {politics.powerStructure.headOfState && (
+                    <>
+                      <dt>Chef d’État</dt>
+                      <dd>{politics.powerStructure.headOfState}</dd>
+                    </>
+                  )}
+
+                  {politics.powerStructure.headOfGovernment && (
+                    <>
+                      <dt>Chef de gouvernement</dt>
+                      <dd>{politics.powerStructure.headOfGovernment}</dd>
+                    </>
+                  )}
+
+                  {politics.powerStructure.legitimacyBasis && (
+                    <>
+                      <dt>Légitimité</dt>
+                      <dd>{politics.powerStructure.legitimacyBasis}</dd>
+                    </>
+                  )}
+
+                  {politics.powerStructure.decisionProcess && (
+                    <>
+                      <dt>Prise de décision</dt>
+                      <dd>{politics.powerStructure.decisionProcess}</dd>
+                    </>
+                  )}
+                </dl>
+
+                {politics.powerStructure.description && (
+                  <p class="politics-desc">
+                    {politics.powerStructure.description}
+                  </p>
+                )}
+              </article>
+            )}
+
+            {politics.internalTensions &&
+              politics.internalTensions.length > 0 && (
+                <article class="object-block">
+                  <h3 class="object-block-title">Tensions internes</h3>
+                  <ul class="politics-list">
+                    {politics.internalTensions.map((t) => (
+                      <li class="politics-item">
+                        <div class="politics-item-header">
+                          <span class="politics-item-name">{t.name}</span>
+                          {t.type && (
+                            <span class="politics-item-tag is-danger">
+                              {t.type}
+                            </span>
+                          )}
+                        </div>
+
+                        {t.description && (
+                          <p class="politics-item-desc">{t.description}</p>
+                        )}
+
+                        {t.stakes && (
+                          <p class="politics-item-note">
+                            Enjeu : {t.stakes}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+            {politics.lawsAndCustoms &&
+              politics.lawsAndCustoms.length > 0 && (
+                <article class="object-block">
+                  <h3 class="object-block-title">Lois & coutumes marquantes</h3>
+                  <ul class="politics-list">
+                    {politics.lawsAndCustoms.map((l) => (
+                      <li class="politics-item">
+                        <div class="politics-item-header">
+                          <span class="politics-item-name">{l.name}</span>
+                          {l.type && (
+                            <span class="politics-item-tag">
+                              {l.type}
+                            </span>
+                          )}
+                        </div>
+
+                        {l.description && (
+                          <p class="politics-item-desc">{l.description}</p>
+                        )}
+
+                        {l.impact && (
+                          <p class="politics-item-note">
+                            Impact : {l.impact}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+          </div>
+
+          {/* Colonne latérale : institutions, factions, diplomatie */}
+          <aside class="country-aside">
+            {politics.keyInstitutions &&
+              politics.keyInstitutions.length > 0 && (
+                <section class="object-block">
+                  <h3 class="object-block-title">Institutions clés</h3>
+                  <ul class="politics-list">
+                    {politics.keyInstitutions.map((inst) => (
+                      <li class="politics-item">
+                        <div class="politics-item-header">
+                          <span class="politics-item-name">{inst.name}</span>
+                          {inst.type && (
+                            <span class="politics-item-tag">
+                              {inst.type}
+                            </span>
+                          )}
+                        </div>
+
+                        {inst.role && (
+                          <p class="politics-item-desc">{inst.role}</p>
+                        )}
+
+                        {(inst.composition || inst.seat) && (
+                          <p class="politics-item-note">
+                            {inst.composition && <>{inst.composition}</>}
+                            {inst.composition && inst.seat && " — "}
+                            {inst.seat && <>Siège : {inst.seat}</>}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+            {politics.factions && politics.factions.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Factions influentes</h3>
+                <ul class="politics-list">
+                  {politics.factions.map((f) => (
+                    <li class="politics-item">
+                      <div class="politics-item-header">
+                        <span class="politics-item-name">{f.name}</span>
+                        {f.type && (
+                          <span class="politics-item-tag">
+                            {f.type}
+                          </span>
+                        )}
+                      </div>
+
+                      {f.goal && (
+                        <p class="politics-item-desc">
+                          Objectif : {f.goal}
+                        </p>
+                      )}
+
+                      {(f.methods || f.influenceZone) && (
+                        <p class="politics-item-note">
+                          {f.methods && <>Méthodes : {f.methods}</>}
+                          {f.methods && f.influenceZone && " — "}
+                          {f.influenceZone && (
+                            <>Influence : {f.influenceZone}</>
+                          )}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {politics.diplomaticRelations &&
+              politics.diplomaticRelations.length > 0 && (
+                <section class="object-block">
+                  <h3 class="object-block-title">Relations diplomatiques</h3>
+                  <ul class="politics-list">
+                    {politics.diplomaticRelations.map((d) => (
+                      <li class="politics-item">
+                        <div class="politics-item-header">
+                          <span class="politics-item-name">
+                            {d.partner}
+                          </span>
+                          {d.nature && (
+                            <span class="politics-item-tag">
+                              {d.nature}
+                            </span>
+                          )}
+                        </div>
+                        {d.summary && (
+                          <p class="politics-item-desc">{d.summary}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+          </aside>
+        </div>
+
+        {hasMap && (
+          <section class="object-block politics-map-block">
+            <h3 class="object-block-title">Carte du pouvoir</h3>
+            <p class="politics-map-intro">
+              Vue rapide des acteurs politiques majeurs du pays. Chaque pastille
+              représente une institution ou une faction clé.
+            </p>
+
+            <div class="politics-map-layout">
+              <div class="politics-map-main">
+                {politics.keyInstitutions &&
+                  politics.keyInstitutions.length > 0 && (
+                    <div class="politics-map-section">
+                      <h4>Institutions</h4>
+                      <div class="politics-map-chips">
+                        {politics.keyInstitutions.map((inst) => (
+                          <span class="politics-chip">
+                            <span class="politics-chip-name">{inst.name}</span>
+                            {inst.type && (
+                              <span class="politics-chip-tag">
+                                {inst.type}
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {politics.factions && politics.factions.length > 0 && (
+                  <div class="politics-map-section">
+                    <h4>Factions</h4>
+                    <div class="politics-map-chips">
+                      {politics.factions.map((f) => (
+                        <span class="politics-chip is-ghost">
+                          <span class="politics-chip-name">{f.name}</span>
+                          {f.type && (
+                            <span class="politics-chip-tag">
+                              {f.type}
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <aside class="politics-map-aside">
+                {politics.timeline && politics.timeline.length > 0 ? (
+                  <ol class="politics-timeline">
+                    {politics.timeline.map((ev) => (
+                      <li class="politics-timeline-item">
+                        <div class="politics-timeline-header">
+                          <span class="politics-timeline-title">
+                            {ev.title}
+                          </span>
+                          {ev.era && (
+                            <span class="politics-timeline-era">
+                              {ev.era}
+                            </span>
+                          )}
+                        </div>
+
+                        {ev.description && (
+                          <p class="politics-timeline-desc">
+                            {ev.description}
+                          </p>
+                        )}
+
+                        {ev.consequences && (
+                          <p class="politics-timeline-note">
+                            Conséquences : {ev.consequences}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                ) : politics.notes && politics.notes.length > 0 ? (
+                  <ul class="politics-notes">
+                    {politics.notes.map((note) => (
+                      <li>{note}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="politics-map-note">
+                    Tu pourras plus tard relier chaque acteur politique à une
+                    fiche détaillée et une frise historique.
+                  </p>
+                )}
+              </aside>
+            </div>
+          </section>
+        )}
+      </>
+    )}
+  </section>
+</CountryLayout>

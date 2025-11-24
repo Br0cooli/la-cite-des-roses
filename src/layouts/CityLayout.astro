@@ -1,0 +1,95 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+interface Props {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  regionTag?: string;
+  emblem?: string;
+  populationApprox?: string;
+  basePath: string;
+  currentSection: string;
+}
+
+const {
+  name,
+  subtitle,
+  typeLabel,
+  regionTag,
+  emblem,
+  populationApprox,
+  basePath,
+  currentSection
+} = Astro.props as Props;
+
+const sections = [
+  { id: "general", label: "Général" },
+  { id: "geographie", label: "Géographie & quartiers" },
+  { id: "societe", label: "Population & société" },
+  { id: "economie", label: "Économie & activités" },
+  { id: "politique", label: "Pouvoir & influences" },
+  { id: "histoire", label: "Histoire" },
+  { id: "lieux", label: "Lieux remarquables" },
+  { id: "carte", label: "Carte" }
+];
+---
+
+<BaseLayout title={name}>
+  <div class="city-shell">
+    <header class="city-header">
+      <div class="city-header-text">
+        {typeLabel && <p class="city-type">{typeLabel}</p>}
+        <h1 class="city-name">{name}</h1>
+        {subtitle && <p class="city-subtitle">{subtitle}</p>}
+      </div>
+
+      <div class="city-header-meta">
+        {regionTag && (
+          <span class="city-pill">
+            <span class="city-pill-label">Région</span>
+            <span>{regionTag}</span>
+          </span>
+        )}
+
+        {populationApprox && (
+          <span class="city-pill">
+            <span class="city-pill-label">Population</span>
+            <span>{populationApprox}</span>
+          </span>
+        )}
+
+        {emblem && (
+          <span class="city-pill">
+            <span class="city-pill-label">Emblème</span>
+            <span>{emblem}</span>
+          </span>
+        )}
+      </div>
+    </header>
+
+    <div class="city-layout">
+      <aside class="city-sidebar">
+        <nav class="city-nav">
+          {sections.map((s) => {
+            const isActive = currentSection === s.id;
+            const href = `${basePath}/${s.id}`;
+            return (
+              <a
+                href={href}
+                class={"city-nav-link" + (isActive ? " city-nav-link--active" : "")}
+              >
+                <span class="city-nav-indicator" />
+                <span class="city-nav-label">{s.label}</span>
+              </a>
+            );
+          })}
+        </nav>
+      </aside>
+
+      <div class="city-content">
+        <slot />
+      </div>
+    </div>
+  </div>
+</BaseLayout>

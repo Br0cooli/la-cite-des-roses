@@ -1,0 +1,149 @@
+---
+import CharacterLayout from "../../../layouts/CharacterLayout.astro";
+import RadarChart from "../../../components/RadarChart.astro";
+
+interface MetaPersonnage {
+  name: string;
+  title?: string;
+  role?: string;
+  tag?: string;
+  arc?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
+interface StatAxis {
+  label: string;
+  value: number;
+}
+
+interface Skill {
+  name: string;
+  level?: number;
+  note?: string;
+}
+
+interface StatsData {
+  axes: StatAxis[];
+  skills?: Skill[];
+}
+
+interface Props {
+  meta: MetaPersonnage;
+  slug: string;
+  stats: StatsData | null;
+}
+
+const { meta, slug, stats } = Astro.props as Props;
+const basePath = `/personnages/${slug}`;
+
+// ⬇️ OBLIGATOIRE pour /personnages/[slug]/stats
+export async function getStaticPaths() {
+  // on récupère tous les meta.json
+  const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
+  // on récupère tous les stats.json
+  const statsModules = import.meta.glob("../../../data/personnages/*/stats.json");
+
+  const statsMap: Record<string, StatsData> = {};
+
+  // on mappe les stats par slug
+  await Promise.all(
+    Object.entries(statsModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as StatsData;
+
+      const match = path.match(/personnages\/([^/]+)\/stats\.json$/);
+      const s = match ? match[1] : "";
+      if (s) statsMap[s] = data;
+    })
+  );
+
+  // on génère une page /personnages/<slug>/stats pour chaque meta
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MetaPersonnage;
+
+      const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          meta: data,
+          slug: s,
+          stats: statsMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+---
+
+<CharacterLayout
+  name={meta.name}
+  subtitle={meta.title || meta.role}
+  tag={meta.tag}
+  arc={meta.arc}
+  basePath={basePath}
+  currentSection="stats"
+>
+  <section class="card">
+    <h3 class="page-title" style="margin-left:0;">Statistiques</h3>
+    <p class="page-subtitle" style="margin-left:0;">
+      Aperçu global des forces de {meta.name}, puis détails de ses compétences
+      spécifiques.
+    </p>
+
+    <div class="stats-layout">
+      {/* RADAR EN LARGEUR */}
+      <div class="stats-radar-block">
+        <h4 class="stats-radar-title">Profil général</h4>
+
+        <div class="stats-radar">
+          {stats && stats.axes && stats.axes.length > 0 ? (
+            <RadarChart axes={stats.axes} maxValue={10} />
+          ) : (
+            <p class="stats-empty">
+              Aucune statistique générale définie pour ce personnage pour le
+              moment. Remplis <code>stats.json</code> dans
+              <code>src/data/personnages/{slug}/</code>.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* COMPÉTENCES EN DESSOUS */}
+      <div class="stats-details">
+        <h4>Compétences spécifiques</h4>
+
+        {stats && stats.skills && stats.skills.length > 0 ? (
+          <ul class="skills-list">
+            {stats.skills.map((skill) => (
+              <li class="skill-item">
+                <div class="skill-header">
+                  <span class="skill-name">{skill.name}</span>
+                  {typeof skill.level === "number" && (
+                    <span class="skill-level">Niveau {skill.level}/10</span>
+                  )}
+                </div>
+                {skill.note && (
+                  <p class="skill-note">
+                    {skill.note}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="stats-empty">
+            Aucune compétence détaillée pour l’instant. Tu peux renseigner une
+            liste dans <code>stats.json</code> (clé <code>skills</code>).
+          </p>
+        )}
+      </div>
+    </div>
+  </section>
+</CharacterLayout>

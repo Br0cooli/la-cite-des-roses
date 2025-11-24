@@ -1,0 +1,139 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+// 🚨 LOG DE DEBUG POUR VOIR CE QUE ASTRO VOIT
+console.log("SEARCH:", import.meta.glob("../../data/personnages/*/meta.json"));
+
+// CHEMIN ABSOLUMENT CORRECT depuis src/pages/personnages/index.astro
+const modules = import.meta.glob("../../data/personnages/*/meta.json", {
+  eager: true
+});
+
+// Si les modules sont vides → aucun personnage
+console.log("META JSON TROUVÉS :", Object.keys(modules));
+
+function getFamilyName(fullName) {
+  if (!fullName) return "Autres";
+
+  const parts = fullName.trim().split(" ");
+  if (parts.length === 1) return parts[0];
+
+  const preps = ["de", "di", "da", "del", "della", "dei", "degli", "van", "von"];
+
+  const lastTwo = parts.slice(-2);
+  if (preps.includes(lastTwo[0].toLowerCase())) {
+    return lastTwo.join(" ");
+  }
+
+  return parts[parts.length - 1];
+}
+
+// Construction de la liste des personnages
+const characters = Object.entries(modules)
+  .map(([path, mod]) => {
+    const data = mod.default ?? mod;
+
+    const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+    const slug = match ? match[1] : "";
+
+    if (!slug) return null;
+
+    const name = data.name || slug || "Personnage sans nom";
+    const family = getFamilyName(name);
+    const tags = data.tags || data.motsCles || [];
+    const avatar =
+      data.avatar || `/personnages/${slug}/portrait.png`;
+
+    return {
+      slug,
+      name,
+      title: data.title || data.role || data.subtitle || "",
+      role: data.role || "",
+      mainTag: data.tag || data.faction || data.origin || "",
+      tags,
+      avatar,
+      family
+    };
+  })
+  .filter(Boolean);
+
+// Tri
+characters.sort((a, b) => {
+  if (a.family === b.family) {
+    return a.name.localeCompare(b.name);
+  }
+  return a.family.localeCompare(b.family);
+});
+
+// Regroupement par famille
+const grouped = new Map();
+for (const c of characters) {
+  if (!grouped.has(c.family)) grouped.set(c.family, []);
+  grouped.get(c.family).push(c);
+}
+---
+
+<BaseLayout title="Personnages — La Cité des Roses">
+  <section class="card">
+    <h1 class="page-title">Personnages</h1>
+    <p class="page-subtitle">
+      Habitants de la Cité des Roses, rangés par familles et lignées.
+    </p>
+
+    {characters.length === 0 && (
+      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+        Aucun personnage trouvé. Vérifie tes dossiers dans :
+        <code>src/data/personnages/&lt;slug&gt;/meta.json</code>.
+      </p>
+    )}
+
+    {characters.length > 0 && (
+      <div class="characters-list">
+        {Array.from(grouped.entries()).map(([family, chars]) => (
+          <section class="family-section">
+            <h2 class="family-title">{family}</h2>
+
+            <div class="family-grid">
+              {chars.map((char) => (
+                <a
+                  class="character-card"
+                  href={`/personnages/${char.slug}/general`}
+                >
+                  <div class="character-avatar">
+                    <img
+                      src={char.avatar}
+                      alt={`Portrait de ${char.name}`}
+                      loading="lazy"
+                    />
+                  </div>
+
+                  <div class="character-info">
+                    <h3>{char.name}</h3>
+
+                    {(char.title || char.role) && (
+                      <p class="character-role">
+                        {char.title || char.role}
+                      </p>
+                    )}
+
+                    {char.mainTag && (
+                      <p class="character-tag">{char.mainTag}</p>
+                    )}
+
+                    {char.tags && char.tags.length > 0 && (
+                      <div class="tags-row">
+                        {char.tags.map((tag) => (
+                          <span class="pill-tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    )}
+  </section>
+</BaseLayout>

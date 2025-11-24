@@ -1,0 +1,86 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const module = await import("../data/chronologie/evenements.json");
+const events: any[] = module.default;
+
+// Plots définis : 3 colonnes fixes
+const plots = [
+  { id: "principal", label: "Plot principal" },
+  { id: "delia_leandre", label: "Delia & Léandre" },
+  { id: "delia_alois", label: "Delia & Aloïs" }
+];
+
+// Années uniques, triées
+const years = Array.from(new Set(events.map((e) => e.annee))).sort(
+  (a, b) => a - b
+);
+---
+
+<BaseLayout title="Chronologie — La Cité des Roses">
+  <section class="card">
+    <h1 class="page-title">Chronologie</h1>
+    <p class="page-subtitle">
+      Vue d’ensemble des grands événements. Chaque ligne correspond à un moment
+      dans le temps, et les trois fils narratifs sont alignés&nbsp;: le plot
+      principal, Delia &amp; Léandre, et Delia &amp; Aloïs. Une ligne par
+      timeline, avec un point lorsqu’un événement s’y produit.
+    </p>
+
+    <div class="chronology-grid">
+      <div class="chronology-header">
+        <div class="chronology-year-col">Temps</div>
+        {plots.map((plot) => (
+          <div class="chronology-arc-col">
+            {plot.label}
+          </div>
+        ))}
+      </div>
+
+      <div class="chronology-body">
+        {years.map((year) => (
+          <div class="chronology-row">
+            <div class="chronology-year-col">
+              <span class="chronology-year-pill">Année {year}</span>
+            </div>
+
+            {plots.map((plot) => {
+              const evts = events.filter(
+                (e) => e.annee === year && e.plot === plot.id
+              );
+
+              const hasEvent = evts.length > 0;
+
+              return (
+                <div class="chronology-cell">
+                  <div
+                    class={
+                      "chronology-timeline-rail" +
+                      (hasEvent ? " has-event" : "")
+                    }
+                  >
+                    {hasEvent && <span class="chronology-timeline-dot"></span>}
+                  </div>
+
+                  <div class="chronology-events">
+                    {evts.map((evt) => (
+                      <article class="chronology-event">
+                        <h3>{evt.titre}</h3>
+                        <p>{evt.description}</p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <p class="page-subtitle" style="margin-top:1.5rem;">
+      Les points indiquent où chaque fil narratif est actif. Même ligne =
+      événements simultanés, colonnes différentes = plots parallèles.
+    </p>
+  </section>
+</BaseLayout>

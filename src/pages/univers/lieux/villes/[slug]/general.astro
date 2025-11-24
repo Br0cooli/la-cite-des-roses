@@ -1,0 +1,183 @@
+---
+import CityLayout from "@layouts/CityLayout.astro";
+
+interface CityMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  regionTag?: string;
+  emblem?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
+interface CityGeneralData {
+  summary?: string;
+  nickname?: string;
+  motto?: string;
+  atmosphere?: string;
+  geographyOverview?: string;
+  populationProfile?: string;
+  economyOverview?: string;
+  keyTraits?: string[];
+  tags?: string[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  meta: CityMeta;
+  general: CityGeneralData | null;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/villes/*/meta.json");
+  const generalModules = import.meta.glob("@data/lieux/villes/*/general.json");
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as CityMeta;
+
+      const match = path.match(/villes\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      let general: CityGeneralData | null = null;
+      const generalResolver =
+        generalModules[path.replace("meta.json", "general.json")];
+
+      if (generalResolver) {
+        const genMod: any = await generalResolver();
+        general = (genMod?.default ?? genMod) as CityGeneralData;
+      }
+
+      return {
+        params: { slug },
+        props: { slug, meta, general }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { slug, meta, general } = Astro.props as Props;
+
+const basePath = `/univers/lieux/villes/${slug}`;
+
+const traits = general?.keyTraits ?? [];
+const tags = general?.tags ?? [];
+const notes = general?.notes ?? [];
+---
+
+<CityLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
+  populationApprox={meta.populationApprox}
+  basePath={basePath}
+  currentSection="general"
+>
+  <section class="city-general">
+    <h2 class="section-title">Présentation générale</h2>
+
+    <div class="city-general-grid">
+      <div class="city-general-main">
+
+        {general?.summary && (
+          <p class="city-summary">{general.summary}</p>
+        )}
+
+        <dl class="city-facts">
+          {general?.nickname && (
+            <>
+              <dt>Surnom</dt>
+              <dd>{general.nickname}</dd>
+            </>
+          )}
+
+          {general?.motto && (
+            <>
+              <dt>Devise</dt>
+              <dd>{general.motto}</dd>
+            </>
+          )}
+
+          {meta.regionTag && (
+            <>
+              <dt>Rattachement</dt>
+              <dd>{meta.regionTag}</dd>
+            </>
+          )}
+
+          {meta.populationApprox && (
+            <>
+              <dt>Population</dt>
+              <dd>{meta.populationApprox}</dd>
+            </>
+          )}
+        </dl>
+
+        {traits.length > 0 && (
+          <div class="city-traits">
+            {traits.map((t) => (
+              <span class="city-trait-pill">{t}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="city-aspects">
+        {general?.atmosphere && (
+          <section class="city-aspect-block">
+            <h3>Atmosphère de la ville</h3>
+            <p>{general.atmosphere}</p>
+          </section>
+        )}
+
+        {general?.geographyOverview && (
+          <section class="city-aspect-block">
+            <h3>Cadre & géographie</h3>
+            <p>{general.geographyOverview}</p>
+          </section>
+        )}
+
+        {general?.populationProfile && (
+          <section class="city-aspect-block">
+            <h3>Population & société</h3>
+            <p>{general.populationProfile}</p>
+          </section>
+        )}
+
+        {general?.economyOverview && (
+          <section class="city-aspect-block">
+            <h3>Économie & activités</h3>
+            <p>{general.economyOverview}</p>
+          </section>
+        )}
+      </div>
+    </div>
+
+    {tags.length > 0 && (
+      <div class="city-tags">
+        {tags.map((tag) => (
+          <span class="city-tag">#{tag}</span>
+        ))}
+      </div>
+    )}
+
+    {notes.length > 0 && (
+      <section class="city-notes">
+        <h3>Notes diverses</h3>
+        <ul>
+          {notes.map((n) => (
+            <li>{n}</li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </section>
+</CityLayout>

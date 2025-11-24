@@ -1,0 +1,150 @@
+---
+import ObjectLayout from "../../../../layouts/ObjectLayout.astro";
+
+interface ObjetFonctionnement {
+  name?: string;
+  resume?: string;
+
+  mode?: string;
+  conditions?: string;
+  activation?: string;
+  effets?: string;
+  limitations?: string;
+  contreparties?: string;
+  risques?: string;
+
+  etapes?: string[];
+  astuces?: string[];
+}
+
+interface Props {
+  slug: string;
+  data: ObjetFonctionnement;
+}
+
+const { slug, data } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob(
+    "../../../../data/objets/*/fonctionnement.json",
+    { eager: true }
+  );
+
+  const entries = Object.entries(modules).map(([path, mod]) => {
+    const json = (mod as any).default ?? mod;
+    const match = path.match(/objets\/([^/]+)\/fonctionnement\.json$/);
+    const slug = match ? match[1] : "";
+
+    return {
+      params: { slug },
+      props: {
+        slug,
+        data: json as ObjetFonctionnement
+      }
+    };
+  });
+
+  return entries;
+}
+
+const basePath = `/univers/objets/${slug}`;
+const displayName = data.name || "Fonctionnement de l’objet";
+---
+
+<ObjectLayout
+  name={displayName}
+  basePath={basePath}
+  currentSection="fonctionnement"
+>
+  <section class="card object-func">
+    <h3 class="page-title">Fonctionnement</h3>
+
+    {data.resume && (
+      <p class="page-subtitle">
+        {data.resume}
+      </p>
+    )}
+
+    <div class="object-func-layout">
+      <div class="object-func-main">
+        <section class="object-func-block">
+          <h4>Mode d’utilisation</h4>
+          <p>
+            {data.mode ||
+              "Décris ici comment l’objet est utilisé en pratique : porté, caché, brandi, consommé, activé, etc."}
+          </p>
+        </section>
+
+        <section class="object-func-block">
+          <h4>Conditions & déclenchement</h4>
+          <p>
+            {data.conditions ||
+              "Tu peux préciser les conditions nécessaires : lieu, rituel, état émotionnel, présence de certains personnages, ou simple hasard."}
+          </p>
+
+          {data.activation && (
+            <p class="object-func-sub">
+              <strong>Déclenchement&nbsp;:</strong> {data.activation}
+            </p>
+          )}
+        </section>
+
+        <section class="object-func-block">
+          <h4>Effets & conséquences</h4>
+          <p>
+            {data.effets ||
+              "Note ici ce que l’objet provoque : effet immédiat, changement subtil, influence sociale, protection, malédiction, etc."}
+          </p>
+
+          {data.risques && (
+            <p class="object-func-sub">
+              <strong>Risques&nbsp;:</strong> {data.risques}
+            </p>
+          )}
+        </section>
+      </div>
+
+      <aside class="object-func-side">
+        <section class="object-func-side-block">
+          <h5>Limitations & contreparties</h5>
+          <p>
+            {data.limitations ||
+              data.contreparties ||
+              "Précise ce qui empêche l’objet d’être une solution magique à tout : contraintes, coûts, effets secondaires, dépendance émotionnelle."}
+          </p>
+
+          {data.contreparties && (
+            <p class="object-func-sub">
+              <strong>Contreparties&nbsp;:</strong> {data.contreparties}
+            </p>
+          )}
+        </section>
+
+        {data.etapes && data.etapes.length > 0 && (
+          <section class="object-func-side-block">
+            <h5>Étapes d’utilisation</h5>
+            <ol class="object-func-steps">
+              {data.etapes.map((step, index) => (
+                <li>
+                  <span class="step-index">{index + 1}</span>
+                  <span class="step-text">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {data.astuces && data.astuces.length > 0 && (
+          <section class="object-func-side-block">
+            <h5>Remarques & usages subtils</h5>
+            <ul class="object-func-tips">
+              {data.astuces.map((tip) => (
+                <li>{tip}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
+  </section>
+</ObjectLayout>

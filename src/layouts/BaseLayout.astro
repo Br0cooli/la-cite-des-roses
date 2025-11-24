@@ -1,0 +1,88 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "La Cité des Roses",
+  description = "Univers narratif inspiré de la Renaissance italienne, entre couronnes, secrets et amours condamnés."
+} = Astro.props as Props;
+
+const currentPath = Astro.url.pathname;
+---
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>{title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {description && <meta name="description" content={description} />}
+  </head>
+
+  <body class="site-body">
+    {/* Fond global */}
+    <div class="site-background"></div>
+
+    {/* Header */}
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a href="/" class="site-logo">
+          <span class="logo-mark">✶</span>
+          <div class="logo-texts">
+            <span class="logo-title">La Cité des Roses</span>
+            <span class="logo-subtitle">Chroniques d’un royaume fissuré</span>
+          </div>
+        </a>
+
+        <nav class="top-nav">
+          <a
+            href="/"
+            aria-current={currentPath === "/" ? "page" : undefined}
+          >
+            Accueil
+          </a>
+          <a
+            href="/personnages"
+            aria-current={
+              currentPath.startsWith("/personnages") ? "page" : undefined
+            }
+          >
+            Personnages
+          </a>
+          <a
+            href="/univers"
+            aria-current={
+              currentPath.startsWith("/univers") ? "page" : undefined
+            }
+          >
+            Univers
+          </a>
+          <a
+            href="/chronologie"
+            aria-current={
+              currentPath.startsWith("/chronologie") ? "page" : undefined
+            }
+          >
+            Chronologie
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    {/* Contenu principal */}
+    <main class="site-main">
+      <slot />
+    </main>
+
+    {/* Footer */}
+    <footer class="site-footer">
+      <p>
+        La Cité des Roses &copy; {new Date().getFullYear()} · Lore, drames et
+        feuilles de parchemin tachées de café
+      </p>
+    </footer>
+  </body>
+</html>

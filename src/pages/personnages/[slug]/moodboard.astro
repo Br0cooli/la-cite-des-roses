@@ -1,0 +1,188 @@
+---
+import CharacterLayout from "../../../layouts/CharacterLayout.astro";
+
+interface MetaPersonnage {
+  name: string;
+  title?: string;
+  role?: string;
+  tag?: string;
+  arc?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
+interface MoodColor {
+  name: string;
+  hex: string;
+  note?: string;
+}
+
+interface MoodboardData {
+  image?: string;
+  colors?: MoodColor[];
+  quote?: string;
+  quoteSource?: string;
+  spotifyEmbedUrl?: string;
+  spotifyUrl?: string;
+}
+
+interface Props {
+  meta: MetaPersonnage;
+  slug: string;
+  moodboard: MoodboardData | null;
+}
+
+const { meta, slug, moodboard } = Astro.props as Props;
+const basePath = `/personnages/${slug}`;
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
+  const moodModules = import.meta.glob("../../../data/personnages/*/moodboard.json");
+
+  const moodMap: Record<string, MoodboardData> = {};
+
+  await Promise.all(
+    Object.entries(moodModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MoodboardData;
+
+      const match = path.match(/personnages\/([^/]+)\/moodboard\.json$/);
+      const s = match ? match[1] : "";
+      if (s) moodMap[s] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MetaPersonnage;
+
+      const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          meta: data,
+          slug: s,
+          moodboard: moodMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+---
+
+<CharacterLayout
+  name={meta.name}
+  subtitle={meta.title || meta.role}
+  tag={meta.tag}
+  arc={meta.arc}
+  basePath={basePath}
+  currentSection="moodboard"
+>
+  <section class="card">
+    <h3 class="page-title" style="margin-left:0;">Moodboard</h3>
+    <p class="page-subtitle" style="margin-left:0;">
+      Atmosphère visuelle et sonore de {meta.name}&nbsp;: image de référence,
+      palette, citation et morceau associé.
+    </p>
+
+    {moodboard ? (
+      <div class="moodboard-layout">
+        {/* COLONNE GAUCHE : IMAGE */}
+        <div class="moodboard-main">
+          <div class="moodboard-image-wrapper">
+            <img
+              src={
+                moodboard.image ||
+                `/personnages/${slug}/moodboard.png`
+              }
+              alt={`Moodboard de ${meta.name}`}
+              class="moodboard-image"
+            />
+          </div>
+        </div>
+
+        {/* COLONNE DROITE : PALETTE + CITATION */}
+        <aside class="moodboard-side">
+          {moodboard.colors && moodboard.colors.length > 0 && (
+            <div class="moodboard-block">
+              <h4 class="moodboard-block-title">Palette de couleurs</h4>
+              <div class="moodboard-colors">
+                {moodboard.colors.map((c) => (
+                  <div class="mood-color">
+                    <div
+                      class="mood-color-swatch"
+                      style={`background:${c.hex}`}
+                    ></div>
+                    <div class="mood-color-info">
+                      <span class="mood-color-name">{c.name}</span>
+                      <span class="mood-color-hex">{c.hex}</span>
+                      {c.note && (
+                        <span class="mood-color-note">{c.note}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(moodboard.quote || moodboard.quoteSource) && (
+            <div class="moodboard-block">
+              <h4 class="moodboard-block-title">Citation</h4>
+              {moodboard.quote && (
+                <blockquote class="moodboard-quote">
+                  «&nbsp;{moodboard.quote}&nbsp;»
+                </blockquote>
+              )}
+              {moodboard.quoteSource && (
+                <p class="moodboard-quote-source">
+                  — {moodboard.quoteSource}
+                </p>
+              )}
+            </div>
+          )}
+        </aside>
+
+        {/* BLOC MUSIQUE PLEINE LARGEUR */}
+        {(moodboard.spotifyEmbedUrl || moodboard.spotifyUrl) && (
+          <div class="moodboard-block moodboard-music-block">
+            <h4 class="moodboard-block-title">Morceau associé</h4>
+
+            {moodboard.spotifyEmbedUrl && (
+              <div class="moodboard-spotify-embed">
+                <iframe
+                  src={moodboard.spotifyEmbedUrl}
+                  width="100%"
+                  height="180"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                ></iframe>
+              </div>
+            )}
+
+            {moodboard.spotifyUrl && (
+              <p class="moodboard-spotify-link">
+                <a href={moodboard.spotifyUrl} target="_blank">
+                  Ouvrir sur Spotify
+                </a>
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    ) : (
+      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+        Aucun moodboard n’a encore été défini pour ce personnage. Tu peux créer
+        un fichier
+        <code>src/data/personnages/{slug}/moodboard.json</code> pour activer cette
+        page.
+      </p>
+    )}
+  </section>
+</CharacterLayout>

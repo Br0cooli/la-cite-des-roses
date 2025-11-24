@@ -1,0 +1,51 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+// On lit tous les dossiers d’objets via leur general.json
+const modules = import.meta.glob("@data/objets/*/general.json", {
+  eager: true
+});
+
+// Transformer les JSON en objets exploitables
+const objects = Object.entries(modules).map(([path, mod]) => {
+  const data = mod.default ?? mod;
+
+  // Récupérer le slug : nom du dossier entre objets/ et /general.json
+  const slug = path.match(/objets\/([^/]+)\/general\.json$/)?.[1] || "";
+
+  return {
+    slug,
+    name: data.name || slug,
+    type: data.type || "",
+    role: data.role || "",
+    image: data.image || `/objets/${slug}/vignette.png`,
+    tag: data.tag || "",
+  };
+});
+---
+
+<BaseLayout title="Objets">
+  <section class="card">
+    <h1 class="page-title">Objets</h1>
+    <p class="page-subtitle">
+      Reliques, armes, bijoux, lettres scellées… Chaque objet porte sa propre histoire.
+    </p>
+
+    <div class="family-grid">
+      {objects.map((obj) => (
+        <a class="character-card" href={`/univers/objets/${obj.slug}/general`}>
+          <div class="character-avatar">
+            <img src={obj.image} alt={obj.name} />
+          </div>
+
+          <div class="character-info">
+            <h3>{obj.name}</h3>
+
+            {obj.type && <p class="character-role">{obj.type}</p>}
+            {obj.tag && <p class="character-tag">{obj.tag}</p>}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

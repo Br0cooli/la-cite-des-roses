@@ -1,0 +1,381 @@
+---
+import CountryLayout from "@layouts/CountryLayout.astro";
+
+interface ResourceEntry {
+  name: string;
+  type?: string;          // agricole, minérale, artisanale, symbolique...
+  location?: string;
+  description?: string;
+  usage?: string;
+}
+
+interface ProductionSector {
+  name: string;
+  type?: string;          // agriculture, commerce, artisanat, etc.
+  description?: string;
+  workers?: string;       // qui y bosse
+  importance?: string;    // pourquoi c’est clé
+}
+
+interface TradePartner {
+  name: string;
+  type?: string;          // cité, royaume, ligue marchande...
+  goodsExported?: string;
+  goodsImported?: string;
+  balanceSummary?: string;
+}
+
+interface CurrencyInfo {
+  name: string;
+  subUnits?: string;
+  material?: string;
+  usageNotes?: string;
+}
+
+interface EconomicActor {
+  name: string;
+  type?: string;          // guilde, famille, banque, office royal...
+  description?: string;
+  influence?: string;
+}
+
+interface EconomicTension {
+  name: string;
+  type?: string;          // social, fiscal, commercial...
+  description?: string;
+  stakes?: string;
+}
+
+interface EconomyData {
+  overview?: string;
+  resources?: ResourceEntry[];
+  mainSectors?: ProductionSector[];
+  tradePartners?: TradePartner[];
+  currency?: CurrencyInfo;
+  keyActors?: EconomicActor[];
+  tensions?: EconomicTension[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  economy: EconomyData | null;
+}
+
+const { slug, economy } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("@data/lieux/pays/*/economie.json");
+
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const json = (mod?.default ?? mod) as EconomyData;
+
+      const match = path.match(/pays\/([^/]+)\/economie\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: {
+          slug,
+          economy: json
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/lieux/pays/${slug}`;
+const hasInteractive =
+  !!(economy?.resources && economy.resources.length > 0) ||
+  !!(economy?.mainSectors && economy.mainSectors.length > 0) ||
+  !!(economy?.keyActors && economy.keyActors.length > 0);
+---
+
+<CountryLayout
+  name="Économie & ressources"
+  basePath={basePath}
+  currentSection="economie"
+>
+  <section class="object-section">
+    <h2 class="section-title">Économie & ressources</h2>
+
+    {economy?.overview && (
+      <p class="object-summary">
+        {economy.overview}
+      </p>
+    )}
+
+    {!economy && (
+      <p class="object-empty">
+        Aucun fichier <code>economie.json</code> trouvé.<br />
+        Chemin attendu&nbsp;: <code>src/data/lieux/pays/{slug}/economie.json</code>.
+      </p>
+    )}
+
+    {economy && (
+      <>
+        <div class="country-general-grid">
+          {/* Colonne principale : ressources & secteurs */}
+          <div class="country-main">
+            {economy.resources && economy.resources.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Ressources principales</h3>
+                <ul class="eco-list">
+                  {economy.resources.map((r) => (
+                    <li class="eco-item">
+                      <div class="eco-item-header">
+                        <span class="eco-item-name">{r.name}</span>
+                        {r.type && (
+                          <span class="eco-item-tag">
+                            {r.type}
+                          </span>
+                        )}
+                      </div>
+                      {r.location && (
+                        <p class="eco-item-note">
+                          Région&nbsp;: {r.location}
+                        </p>
+                      )}
+                      {r.description && (
+                        <p class="eco-item-desc">{r.description}</p>
+                      )}
+                      {r.usage && (
+                        <p class="eco-item-note">
+                          Usage&nbsp;: {r.usage}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+
+            {economy.mainSectors && economy.mainSectors.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Secteurs économiques</h3>
+                <ul class="eco-list">
+                  {economy.mainSectors.map((s) => (
+                    <li class="eco-item">
+                      <div class="eco-item-header">
+                        <span class="eco-item-name">{s.name}</span>
+                        {s.type && (
+                          <span class="eco-item-tag">
+                            {s.type}
+                          </span>
+                        )}
+                      </div>
+                      {s.description && (
+                        <p class="eco-item-desc">{s.description}</p>
+                      )}
+                      {(s.workers || s.importance) && (
+                        <p class="eco-item-note">
+                          {s.workers && <>Travailleurs&nbsp;: {s.workers}</>}
+                          {s.workers && s.importance && " — "}
+                          {s.importance && <>Rôle&nbsp;: {s.importance}</>}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+
+            {economy.tensions && economy.tensions.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Tensions économiques</h3>
+                <ul class="eco-list">
+                  {economy.tensions.map((t) => (
+                    <li class="eco-item">
+                      <div class="eco-item-header">
+                        <span class="eco-item-name">{t.name}</span>
+                        {t.type && (
+                          <span class="eco-item-tag is-danger">
+                            {t.type}
+                          </span>
+                        )}
+                      </div>
+                      {t.description && (
+                        <p class="eco-item-desc">{t.description}</p>
+                      )}
+                      {t.stakes && (
+                        <p class="eco-item-note">
+                          Enjeu&nbsp;: {t.stakes}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+          </div>
+
+          {/* Colonne latérale : monnaie, partenaires, acteurs */}
+          <aside class="country-aside">
+            {economy.currency && (
+              <section class="object-block">
+                <h3 class="object-block-title">Monnaie & échanges</h3>
+                <dl class="eco-facts">
+                  <dt>Monnaie principale</dt>
+                  <dd>{economy.currency.name}</dd>
+
+                  {economy.currency.subUnits && (
+                    <>
+                      <dt>Subdivision</dt>
+                      <dd>{economy.currency.subUnits}</dd>
+                    </>
+                  )}
+
+                  {economy.currency.material && (
+                    <>
+                      <dt>Support</dt>
+                      <dd>{economy.currency.material}</dd>
+                    </>
+                  )}
+                </dl>
+
+                {economy.currency.usageNotes && (
+                  <p class="eco-currency-note">
+                    {economy.currency.usageNotes}
+                  </p>
+                )}
+              </section>
+            )}
+
+            {economy.tradePartners && economy.tradePartners.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Partenaires commerciaux</h3>
+                <ul class="eco-list">
+                  {economy.tradePartners.map((p) => (
+                    <li class="eco-item">
+                      <div class="eco-item-header">
+                        <span class="eco-item-name">{p.name}</span>
+                        {p.type && (
+                          <span class="eco-item-tag">
+                            {p.type}
+                          </span>
+                        )}
+                      </div>
+                      {(p.goodsExported || p.goodsImported) && (
+                        <p class="eco-item-desc">
+                          {p.goodsExported && (
+                            <>Exports&nbsp;: {p.goodsExported}</>
+                          )}
+                          {p.goodsExported && p.goodsImported && <br />}
+                          {p.goodsImported && (
+                            <>Imports&nbsp;: {p.goodsImported}</>
+                          )}
+                        </p>
+                      )}
+                      {p.balanceSummary && (
+                        <p class="eco-item-note">
+                          {p.balanceSummary}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {economy.keyActors && economy.keyActors.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Acteurs économiques majeurs</h3>
+                <ul class="eco-list">
+                  {economy.keyActors.map((a) => (
+                    <li class="eco-item">
+                      <div class="eco-item-header">
+                        <span class="eco-item-name">{a.name}</span>
+                        {a.type && (
+                          <span class="eco-item-tag">
+                            {a.type}
+                          </span>
+                        )}
+                      </div>
+                      {a.description && (
+                        <p class="eco-item-desc">{a.description}</p>
+                      )}
+                      {a.influence && (
+                        <p class="eco-item-note">
+                          Influence&nbsp;: {a.influence}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </aside>
+        </div>
+
+        {hasInteractive && (
+          <section class="object-block eco-map-block">
+            <h3 class="object-block-title">Carte économique</h3>
+            <p class="eco-map-intro">
+              Vue rapide des ressources, secteurs et acteurs qui structurent la
+              richesse — et la fragilité — du pays.
+            </p>
+
+            <div class="eco-map-layout">
+              <div class="eco-map-main">
+                {economy.resources && economy.resources.length > 0 && (
+                  <div class="eco-map-section">
+                    <h4>Ressources clés</h4>
+                    <div class="eco-map-chips">
+                      {economy.resources.slice(0, 10).map((r) => (
+                        <span class="eco-chip">
+                          <span class="eco-chip-name">{r.name}</span>
+                          {r.type && (
+                            <span class="eco-chip-tag">
+                              {r.type}
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {economy.mainSectors && economy.mainSectors.length > 0 && (
+                  <div class="eco-map-section">
+                    <h4>Secteurs majeurs</h4>
+                    <div class="eco-map-chips">
+                      {economy.mainSectors.map((s) => (
+                        <span class="eco-chip is-ghost">
+                          <span class="eco-chip-name">{s.name}</span>
+                          {s.type && (
+                            <span class="eco-chip-tag">
+                              {s.type}
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <aside class="eco-map-aside">
+                {economy.notes && economy.notes.length > 0 ? (
+                  <ul class="eco-notes">
+                    {economy.notes.map((n) => (
+                      <li>{n}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="eco-map-note">
+                    Tu pourras relier plus tard chaque ressource à une région,
+                    une ville ou un personnage qui en dépend directement.
+                  </p>
+                )}
+              </aside>
+            </div>
+          </section>
+        )}
+      </>
+    )}
+  </section>
+</CountryLayout>

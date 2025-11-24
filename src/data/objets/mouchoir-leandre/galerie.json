@@ -1,0 +1,54 @@
+{
+  "featured": {
+    "src": "/images/objets/mouchoir-leandre/main.jpg",
+    "alt": "Mouchoir crème brodé posé sur une table en bois sombre",
+    "caption": "Le mouchoir de Léandre, tel qu’il est le plus souvent représenté : discret, presque banal, mais chargé de sens.",
+    "category": "Illustration principale"
+  },
+  "variations": [
+    {
+      "src": "/images/objets/mouchoir-leandre/variation-01.jpg",
+      "alt": "Étude du mouchoir froissé entre les doigts d’une main",
+      "caption": "Étude de plis et de tension dans la main de Léandre.",
+      "category": "Étude de pose"
+    },
+    {
+      "src": "/images/objets/mouchoir-leandre/variation-02.jpg",
+      "alt": "Mouchoir posé sur une armure, contraste textile / métal",
+      "caption": "Contraste entre la vulnérabilité du tissu et la dureté de l’armure.",
+      "category": "Composition"
+    }
+  ],
+  "details": [
+    {
+      "src": "/images/objets/mouchoir-leandre/detail-broderie.jpg",
+      "alt": "Gros plan sur la broderie dorée abîmée",
+      "caption": "La broderie à moitié effacée, témoin de l’usure du temps.",
+      "category": "Détail"
+    },
+    {
+      "src": "/images/objets/mouchoir-leandre/detail-taches.jpg",
+      "alt": "Gros plan sur une tache ancienne sur le tissu",
+      "caption": "Tache ancienne dont l’origine est floue même pour Léandre.",
+      "category": "Texture"
+    }
+  ],
+  "storyMoments": [
+    {
+      "src": "/images/objets/mouchoir-leandre/story-entrainement.jpg",
+      "alt": "Léandre essuie discrètement sa main blessée avec le mouchoir",
+      "caption": "Scène d’entraînement : le mouchoir utilisé comme pansement improvisé.",
+      "category": "Chapitre I"
+    },
+    {
+      "src": "/images/objets/mouchoir-leandre/story-chambre-delia.jpg",
+      "alt": "Le mouchoir tombé au sol près des pieds de Delia",
+      "caption": "La nuit des aveux avortés : l’objet reste, lui, là où Léandre n’a pas osé rester.",
+      "category": "Chapitre VI"
+    }
+  ],
+  "notes": [
+    "La galerie permet de montrer le contraste entre l’iconisation de l’objet et sa simplicité initiale.",
+    "Tu peux mélanger des illustrations finies et des études pour montrer l’évolution de ton design."
+  ]
+}

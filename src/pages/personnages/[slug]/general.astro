@@ -1,0 +1,222 @@
+---
+import CharacterLayout from "../../../layouts/CharacterLayout.astro";
+
+interface MetaPersonnage {
+  name: string;
+  title?: string;
+  role?: string;
+  tag?: string;            // origine / faction / maison
+  arc?: string;            // arc narratif
+  avatar?: string;         // portrait
+  resume?: string;         // description rapide
+
+  age?: number | string;
+  birthPlace?: string;     // lieu de naissance
+  socialOrigin?: string;   // origine sociale
+  maritalStatus?: string;  // état civil
+  occupation?: string;     // fonction / métier
+  nationality?: string;
+  languages?: string[] | string;
+  religion?: string;
+  traits?: string[];       // liste de traits de caractère
+  [key: string]: any;
+}
+
+interface Props {
+  meta: MetaPersonnage;
+  slug: string;
+}
+
+const { meta, slug } = Astro.props as Props;
+const basePath = `/personnages/${slug}`;
+
+// Génère /personnages/<slug>/general pour tous les persos
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = mod.default as MetaPersonnage;
+
+      const match = path.match(/personnages\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          meta: data,
+          slug: s
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+// Helpers
+const languages =
+  typeof meta.languages === "string"
+    ? meta.languages
+    : Array.isArray(meta.languages)
+    ? meta.languages.join(", ")
+    : "";
+
+---
+
+<CharacterLayout
+  name={meta.name}
+  subtitle={meta.title || meta.role}
+  tag={meta.tag}
+  arc={meta.arc}
+  basePath={basePath}
+  currentSection="general"
+>
+  <section class="card">
+    <h3 class="page-title" style="margin-left:0;">Présentation générale</h3>
+    <p class="page-subtitle" style="margin-left:0;">
+      Portrait d’ensemble de {meta.name}&nbsp;: identité, origine et place dans la
+      Cité des Roses.
+    </p>
+
+    {/* IDENTITÉ PRINCIPALE : PORTRAIT + TEXTE RAPIDE */}
+    <div class="general-identity">
+      <div class="general-portrait-wrapper">
+        <img
+          src={meta.avatar || `/personnages/${slug}/portrait.png`}
+          alt={`Portrait de ${meta.name}`}
+          class="general-portrait"
+        />
+      </div>
+
+      <div class="general-text">
+        <h4 class="general-name">{meta.name}</h4>
+
+        {(meta.title || meta.role) && (
+          <p class="general-role">
+            {meta.title || meta.role}
+          </p>
+        )}
+
+        {meta.tag && (
+          <p class="general-tagline">
+            {meta.tag}
+          </p>
+        )}
+
+        {meta.arc && (
+          <p class="general-arc">
+            <strong>Arc narratif&nbsp;:</strong> {meta.arc}
+          </p>
+        )}
+
+        {meta.resume && (
+          <p class="general-resume">
+            {meta.resume}
+          </p>
+        )}
+
+        {Array.isArray(meta.traits) && meta.traits.length > 0 && (
+          <div class="general-traits-row">
+            {meta.traits.map((trait) => (
+              <span class="pill-tag">{trait}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* FICHE D’IDENTITÉ + CONTEXTE */}
+    <div class="general-columns">
+      <section>
+        <h4 class="general-block-title">Fiche d’identité</h4>
+        <dl class="general-facts">
+          {meta.age && (
+            <>
+              <dt>Âge</dt>
+              <dd>{meta.age} ans</dd>
+            </>
+          )}
+
+          {meta.birthPlace && (
+            <>
+              <dt>Lieu de naissance</dt>
+              <dd>{meta.birthPlace}</dd>
+            </>
+          )}
+
+          {meta.socialOrigin && (
+            <>
+              <dt>Origine sociale</dt>
+              <dd>{meta.socialOrigin}</dd>
+            </>
+          )}
+
+          {meta.maritalStatus && (
+            <>
+              <dt>État civil</dt>
+              <dd>{meta.maritalStatus}</dd>
+            </>
+          )}
+
+          {meta.occupation && (
+            <>
+              <dt>Rôle / fonction</dt>
+              <dd>{meta.occupation}</dd>
+            </>
+          )}
+
+          {meta.nationality && (
+            <>
+              <dt>Appartenance</dt>
+              <dd>{meta.nationality}</dd>
+            </>
+          )}
+
+          {languages && (
+            <>
+              <dt>Langues</dt>
+              <dd>{languages}</dd>
+            </>
+          )}
+
+          {meta.religion && (
+            <>
+              <dt>Croyances</dt>
+              <dd>{meta.religion}</dd>
+            </>
+          )}
+        </dl>
+      </section>
+
+      <section>
+        <h4 class="general-block-title">Position dans l’histoire</h4>
+        <div class="general-context">
+          {(meta.title || meta.role) && (
+            <p>
+              <strong>Rôle narratif&nbsp;:</strong>{" "}
+              {meta.title || meta.role}
+            </p>
+          )}
+
+          {meta.tag && (
+            <p>
+              <strong>Origine / faction&nbsp;:</strong> {meta.tag}
+            </p>
+          )}
+
+          {meta.arc && (
+            <p>
+              <strong>Arc narratif&nbsp;:</strong> {meta.arc}
+            </p>
+          )}
+
+          {!meta.arc && !meta.tag && !meta.title && !meta.role && meta.resume && (
+            <p>{meta.resume}</p>
+          )}
+        </div>
+      </section>
+    </div>
+  </section>
+</CharacterLayout>

@@ -1,0 +1,53 @@
+{
+  "conceptArt": [
+    {
+      "id": "turnaround",
+      "title": "Turnaround de Delia",
+      "image": "/personnages/delia-de-vallenera/turnaround.png",
+      "kind": "Turnaround",
+      "description": "Étude complète de la silhouette, des volumes du costume et de la posture.",
+      "note": "Base pour toutes les scènes en pied."
+    },
+    {
+      "id": "expressions",
+      "title": "Planches d’expressions",
+      "image": "/personnages/delia-de-vallenera/expressions.png",
+      "kind": "Expressions",
+      "description": "Exploration de ses réactions entre retenue royale et colère mal contenue."
+    },
+    {
+      "id": "props",
+      "title": "Props personnels",
+      "image": "/personnages/delia-de-vallenera/props.png",
+      "kind": "Props",
+      "description": "Mouchoir brodé, anneau-sceau, dague dissimulée.",
+      "note": "Croquis préparatoires liés à l’inventaire."
+    }
+  ],
+  "museum": [
+    {
+      "id": "throne",
+      "title": "La fausse héritière sur le trône",
+      "image": "/personnages/delia-de-vallenera/illu-throne.png",
+      "kind": "Illustration",
+      "year": "Année fictive",
+      "description": "Delia, assise sur le trône, entourée de symboles qui ne lui appartiennent pas vraiment.",
+      "note": "Peut servir de couverture ou d’illustration clé."
+    },
+    {
+      "id": "balcony-night",
+      "title": "La nuit sur les toits d’Aureval",
+      "image": "/personnages/delia-de-vallenera/illu-balcony.png",
+      "kind": "Illustration",
+      "description": "Scène nocturne, entre lucidité et solitude.",
+      "note": "Moment plus intime, moins politique."
+    },
+    {
+      "id": "page-comic",
+      "title": "Planche – Confrontation",
+      "image": "/personnages/delia-de-vallenera/planche-01.png",
+      "kind": "Planche",
+      "description": "Première esquisse d’une scène clé du récit."
+    }
+  ]
+}

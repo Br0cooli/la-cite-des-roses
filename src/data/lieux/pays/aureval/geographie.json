@@ -1,0 +1,99 @@
+{
+  "locationSummary": "Le royaume d'Aureval s'étire le long d'une mer intérieure, avec une capitale bâtie sur des collines surplombant un port ancien. Ses terres alternent entre plaines fertiles, vignobles en terrasse et reliefs plus abrupts à l'est.",
+  "globalShape": "Territoire en arc de cercle épousant la courbe d'une baie profonde, prolongé par des vallées intérieures qui remontent vers les cols montagneux.",
+  "climates": [
+    {
+      "name": "Climat doux côtier",
+      "area": "Littoral et capitale",
+      "description": "Hivers humides mais rarement rigoureux, étés longs et lumineux, propices au commerce maritime."
+    },
+    {
+      "name": "Climat plus rude des cols",
+      "area": "Régions de l'est",
+      "description": "Hivers neigeux, passages parfois impraticables, villages plus isolés."
+    }
+  ],
+  "terrainZones": [
+    {
+      "name": "Baie d'Aureval",
+      "type": "Littoral",
+      "description": "Une côte découpée, alternant falaises et petits ports de pêche.",
+      "importance": "Contrôle essentiel des routes maritimes de la région."
+    },
+    {
+      "name": "Collines de Vallenera",
+      "type": "Collines viticoles",
+      "description": "Des pentes couvertes de vignobles et d'oliveraies, autour de la capitale.",
+      "importance": "Source de richesse et de prestige, symbole du raffinement du royaume."
+    },
+    {
+      "name": "Cols d'Orval",
+      "type": "Relief montagneux",
+      "description": "Une chaîne de cols qui sépare Aureval de ses voisins de l'est.",
+      "importance": "Zone stratégique autant que dangereuse, souvent sujette aux embuscades."
+    }
+  ],
+  "borders": [
+    {
+      "side": "Nord",
+      "neighbor": "Pays marchands du Nord",
+      "description": "Relations variables mais très dépendantes du commerce."
+    },
+    {
+      "side": "Sud",
+      "neighbor": "Mer intérieure",
+      "description": "Ouverture vers d'autres cités-États et ports lointains."
+    },
+    {
+      "side": "Est",
+      "neighbor": "Royaume frontalier",
+      "description": "Frontière plus tendue, marquée par les cols et les forteresses."
+    }
+  ],
+  "travelRoutes": [
+    {
+      "name": "Route des Collines",
+      "type": "Route commerciale terrestre",
+      "from": "Vallenera",
+      "to": "Vignobles de l'intérieur",
+      "description": "Chemin fréquenté, autant par les caravanes de marchands que par les bandits."
+    },
+    {
+      "name": "Voie des Lys",
+      "type": "Route maritime",
+      "from": "Port de Vallenera",
+      "to": "Cités du Nord",
+      "description": "Ligne de vie du royaume, par où transitent épices, vins et rumeurs politiques."
+    }
+  ],
+  "hazards": [
+    {
+      "name": "Brumes de la Baie",
+      "type": "Naturel",
+      "description": "Brouillards denses qui rendent les approches du port dangereuses pour les navires mal guidés."
+    },
+    {
+      "name": "Cols d'Orval",
+      "type": "Stratégique",
+      "description": "Contrôlés par des garnisons royales, mais aussi par des groupes aux loyautés ambiguës."
+    }
+  ],
+  "regionPins": [
+    {
+      "name": "Vallenera",
+      "type": "Capitale",
+      "summary": "Cœur politique et économique du royaume.",
+      "link": "/univers/lieux/villes/vallenera"
+    },
+    {
+      "name": "Baie d'Aureval",
+      "type": "Région côtière",
+      "summary": "Zone maritime clé, riche et vulnérable.",
+      "link": "/univers/lieux/regions/baie-d-aureval"
+    }
+  ],
+  "notes": [
+    "La géographie d'Aureval est pensée pour justifier son importance commerciale autant que sa vulnérabilité politique.",
+    "Les cols et la baie sont des lieux parfaits pour des scènes d'embuscade, de complot ou de rencontre secrète."
+  ]
+}
