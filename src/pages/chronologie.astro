@@ -20,12 +20,6 @@ const years = Array.from(new Set(events.map((e) => e.annee))).sort(
 <BaseLayout title="Chronologie — La Cité des Roses">
   <section class="card">
     <h1 class="page-title">Chronologie</h1>
-    <p class="page-subtitle">
-      Vue d’ensemble des grands événements. Chaque ligne correspond à un moment
-      dans le temps, et les trois fils narratifs sont alignés&nbsp;: le plot
-      principal, Delia &amp; Léandre, et Delia &amp; Aloïs. Une ligne par
-      timeline, avec un point lorsqu’un événement s’y produit.
-    </p>
 
     <div class="chronology-grid">
       <div class="chronology-header">
@@ -120,11 +114,6 @@ const years = Array.from(new Set(events.map((e) => e.annee))).sort(
         </div>
       </div>
     </div>
-
-    <p class="page-subtitle" style="margin-top:1.5rem;">
-      Les points indiquent où chaque fil narratif est actif. Même ligne =
-      événements simultanés, colonnes différentes = plots parallèles.
-    </p>
   </section>
       <script>
       if (typeof window !== "undefined") {

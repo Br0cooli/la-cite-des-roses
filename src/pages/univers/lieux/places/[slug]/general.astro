@@ -1,0 +1,182 @@
+---
+import PlaceLayout from "@layouts/PlaceLayout.astro";
+
+interface MetaPlace {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;      // Place, Fontaine, Forêt, Monument...
+  locationTag?: string;
+  realmTag?: string;
+  moodTag?: string;
+  headerImage?: string;
+  [key: string]: any;
+}
+
+interface GeneralPoint {
+  title?: string;
+  description?: string;
+}
+
+interface GeneralData {
+  summary?: string;           // Petit résumé général (1–2 phrases)
+  description?: string;       // Description longue
+  ambiance?: string;          // Couleurs, sons, odeurs, mood
+  purpose?: string;           // Utilité / rôle du lieu
+  iconicElements?: string[];  // Listes d'éléments caractéristiques
+  keyPoints?: GeneralPoint[]; // Sections structurées
+  notes?: string[];           // Notes d’autrice
+}
+
+interface Props {
+  slug: string;
+  meta: MetaPlace;
+  general: GeneralData | null;
+}
+
+// ========= STATIC PATHS =========
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/places/*/meta.json");
+  const generalModules = import.meta.glob(
+    "@data/lieux/places/*/general.json"
+  );
+
+  const generalMap: Record<string, GeneralData> = {};
+
+  await Promise.all(
+    Object.entries(generalModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as GeneralData;
+
+      const match = path.match(/places\/([^/]+)\/general\.json$/);
+      const slug = match ? match[1] : "";
+      if (slug) generalMap[slug] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as MetaPlace;
+
+      const match = path.match(/places\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: {
+          slug,
+          meta,
+          general: generalMap[slug] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+// ========= LOAD PROPS =========
+
+const { slug, meta, general } = Astro.props as Props;
+
+const basePath = `/univers/lieux/places/${slug}`;
+---
+
+<PlaceLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  locationTag={meta.locationTag}
+  realmTag={meta.realmTag}
+  moodTag={meta.moodTag}
+  image={meta.headerImage}
+  basePath={basePath}
+  currentSection="general"
+>
+  <section class="object-section">
+    <h2 class="section-title">Présentation générale</h2>
+
+    {general?.summary && (
+      <p class="object-summary">
+        {general.summary}
+      </p>
+    )}
+
+    {!general && (
+      <p class="object-empty">
+        Aucun fichier <code>general.json</code> trouvé.<br />
+        Chemin attendu :<br />
+        <code>src/data/lieux/places/{slug}/general.json</code>
+      </p>
+    )}
+
+    {general && (
+      <div class="country-general-grid">
+        {/* COLONNE PRINCIPALE */}
+        <div class="country-main">
+          {general.description && (
+            <article class="object-block">
+              <h3 class="object-block-title">Description</h3>
+              <p>{general.description}</p>
+            </article>
+          )}
+
+          {general.ambiance && (
+            <article class="object-block">
+              <h3 class="object-block-title">Ambiance & impressions</h3>
+              <p>{general.ambiance}</p>
+            </article>
+          )}
+
+          {general.purpose && (
+            <article class="object-block">
+              <h3 class="object-block-title">Rôle & utilité du lieu</h3>
+              <p>{general.purpose}</p>
+            </article>
+          )}
+
+          {general.keyPoints && general.keyPoints.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Points importants</h3>
+              <ul class="object-notes">
+                {general.keyPoints.map((p) => (
+                  <li>
+                    {p.title && <strong>{p.title} — </strong>}
+                    {p.description}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          )}
+
+          {general.notes && general.notes.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {general.notes.map((n) => (
+                  <li>{n}</li>
+                ))}
+              </ul>
+            </article>
+          )}
+        </div>
+
+        {/* COLONNE LATÉRALE */}
+        <aside class="country-aside">
+          {general.iconicElements &&
+            general.iconicElements.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Éléments emblématiques</h3>
+                <ul class="object-notes">
+                  {general.iconicElements.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+        </aside>
+      </div>
+    )}
+  </section>
+</PlaceLayout>

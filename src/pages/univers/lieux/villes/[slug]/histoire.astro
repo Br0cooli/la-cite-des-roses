@@ -1,0 +1,339 @@
+---
+import CityLayout from "@layouts/CityLayout.astro";
+
+interface CityMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  regionTag?: string;
+  emblem?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
+interface HistoryEra {
+  id: string;
+  name: string;         // "Fondation", "Âge d’or", "Déclin", etc.
+  period?: string;      // "Il y a 200 ans", "Avant la guerre des Lys"...
+  summary?: string;
+  keyEvents?: string[]; // petites puces dans l’ère
+}
+
+interface HistoryEvent {
+  id: string;
+  label: string;        // nom de l’événement
+  approxDate?: string;  // "An 123", "Une génération plus tôt"...
+  eraRef?: string;      // id d’ère éventuel
+  summary?: string;
+  impact?: string;      // impact concret sur la ville
+}
+
+interface HistoryCrisis {
+  name: string;         // "Grand incendie", "Siège d’Auberac"...
+  period?: string;
+  type?: string;        // guerre, catastrophe, complot...
+  description?: string;
+  consequences?: string;
+}
+
+interface HistoryAnecdote {
+  title: string;
+  type?: string;        // rumeur, légende, fait divers...
+  summary?: string;
+  truthStatus?: string; // "Probable", "Officiellement démenti", etc.
+}
+
+interface CityHistoryData {
+  overview?: string;           // phrase d’accroche
+  originStory?: string;        // fondation / pourquoi cette ville ici
+  foundingContext?: string;    // contexte politique / économique
+  symbolicRole?: string;       // rôle dans le royaume, image dans l’imaginaire
+
+  eras?: HistoryEra[];
+  timelineEvents?: HistoryEvent[];
+  crisesAndWars?: HistoryCrisis[];
+  legendsAndAnecdotes?: HistoryAnecdote[];
+
+  reputationToday?: string;    // comment elle est vue à l’époque de l’histoire
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  meta: CityMeta;
+  history: CityHistoryData | null;
+}
+
+const { slug, meta, history } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/villes/*/meta.json");
+  const histModules = import.meta.glob("@data/lieux/villes/*/histoire.json");
+
+  const histMap: Record<string, CityHistoryData> = {};
+
+  await Promise.all(
+    Object.entries(histModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as CityHistoryData;
+
+      const match = path.match(/villes\/([^/]+)\/histoire\.json$/);
+      const s = match ? match[1] : "";
+      if (s) histMap[s] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as CityMeta;
+
+      const match = path.match(/villes\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          slug: s,
+          meta,
+          history: histMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/lieux/villes/${slug}`;
+---
+
+<CityLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel || "Ville"}
+  regionTag={meta.regionTag}
+  populationApprox={meta.populationApprox}
+  keywords={meta.keywords}
+  basePath={basePath}
+  currentSection="histoire"
+>
+  <section class="card city-history-page">
+    <header class="page-header city-history-header">
+      <h2 class="section-title">Histoire de la ville</h2>
+
+      {history?.overview && (
+        <p class="page-subtitle">
+          {history.overview}
+        </p>
+      )}
+    </header>
+
+    {!history && (
+      <p class="object-empty">
+        Aucun fichier <code>histoire.json</code> trouvé pour cette ville.<br />
+        Chemin attendu :
+        <code>src/data/lieux/villes/{slug}/histoire.json</code>
+      </p>
+    )}
+
+    {history && (
+      <div class="city-history-grid">
+        {/* Colonne principale : origine + grandes périodes */}
+        <div class="city-history-main">
+          {(history.originStory ||
+            history.foundingContext ||
+            history.symbolicRole) && (
+            <article class="object-block">
+              <h3 class="object-block-title">Origines & rôle historique</h3>
+
+              {history.originStory && (
+                <p class="history-text">
+                  {history.originStory}
+                </p>
+              )}
+
+              {history.foundingContext && (
+                <p class="history-text">
+                  {history.foundingContext}
+                </p>
+              )}
+
+              {history.symbolicRole && (
+                <p class="history-text">
+                  {history.symbolicRole}
+                </p>
+              )}
+            </article>
+          )}
+
+          {history.eras && history.eras.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Grandes époques</h3>
+              <ul class="history-era-list">
+                {history.eras.map((era) => (
+                  <li class="history-era-item">
+                    <div class="history-era-header">
+                      <h4 class="history-era-name">{era.name}</h4>
+                      {era.period && (
+                        <span class="place-meta-pill">
+                          {era.period}
+                        </span>
+                      )}
+                    </div>
+                    {era.summary && (
+                      <p class="history-text">
+                        {era.summary}
+                      </p>
+                    )}
+                    {era.keyEvents && era.keyEvents.length > 0 && (
+                      <ul class="history-era-events">
+                        {era.keyEvents.map((evt) => (
+                          <li>{evt}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          )}
+
+          {history.crisesAndWars &&
+            history.crisesAndWars.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Crises, sièges & catastrophes</h3>
+                <ul class="history-crisis-list">
+                  {history.crisesAndWars.map((c) => (
+                    <li class="history-crisis-item">
+                      <div class="history-crisis-header">
+                        <span class="history-crisis-name">{c.name}</span>
+                        {c.type && (
+                          <span class="place-meta-pill">
+                            {c.type}
+                          </span>
+                        )}
+                      </div>
+                      {c.period && (
+                        <p class="history-meta">
+                          Période : {c.period}
+                        </p>
+                      )}
+                      {c.description && (
+                        <p class="history-text">
+                          {c.description}
+                        </p>
+                      )}
+                      {c.consequences && (
+                        <p class="history-meta">
+                          Conséquences : {c.consequences}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+
+          {history.reputationToday && (
+            <article class="object-block">
+              <h3 class="object-block-title">Réputation actuelle</h3>
+              <p class="history-text">
+                {history.reputationToday}
+              </p>
+            </article>
+          )}
+
+          {history.notes && history.notes.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {history.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </article>
+          )}
+        </div>
+
+        {/* Colonne latérale : timeline + anecdotes */}
+        <aside class="city-history-aside">
+          {history.timelineEvents &&
+            history.timelineEvents.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Timeline narrative</h3>
+                <ul class="history-timeline-list">
+                  {history.timelineEvents.map((evt) => (
+                    <li class="history-timeline-item">
+                      <div class="history-timeline-dot"></div>
+                      <div class="history-timeline-content">
+                        <div class="history-timeline-header">
+                          <span class="history-timeline-label">
+                            {evt.label}
+                          </span>
+                          {evt.approxDate && (
+                            <span class="history-timeline-date">
+                              {evt.approxDate}
+                            </span>
+                          )}
+                        </div>
+                        {evt.eraRef && (
+                          <p class="history-meta">
+                            Période : {evt.eraRef}
+                          </p>
+                        )}
+                        {evt.summary && (
+                          <p class="history-text">
+                            {evt.summary}
+                          </p>
+                        )}
+                        {evt.impact && (
+                          <p class="history-meta">
+                            Impact : {evt.impact}
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+          {history.legendsAndAnecdotes &&
+            history.legendsAndAnecdotes.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Légendes & anecdotes</h3>
+                <ul class="history-anecdote-list">
+                  {history.legendsAndAnecdotes.map((a) => (
+                    <li class="history-anecdote-item">
+                      <div class="history-anecdote-header">
+                        <span class="history-anecdote-title">
+                          {a.title}
+                        </span>
+                        {a.type && (
+                          <span class="place-meta-pill">
+                            {a.type}
+                          </span>
+                        )}
+                      </div>
+                      {a.summary && (
+                        <p class="history-text">
+                          {a.summary}
+                        </p>
+                      )}
+                      {a.truthStatus && (
+                        <p class="history-meta">
+                          Crédibilité : {a.truthStatus}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+        </aside>
+      </div>
+    )}
+  </section>
+</CityLayout>

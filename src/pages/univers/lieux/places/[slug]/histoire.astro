@@ -1,0 +1,347 @@
+---
+import PlaceLayout from "@layouts/PlaceLayout.astro";
+
+interface MetaPlace {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;      // Place, Fontaine, Forêt, Monument...
+  locationTag?: string;
+  realmTag?: string;
+  moodTag?: string;
+  headerImage?: string;
+  [key: string]: any;
+}
+
+interface HistoryEra {
+  id: string;
+  name: string;         // "Fondation", "Temps des processions", etc.
+  period?: string;      // "Il y a deux siècles", "Sous le règne d’Amaranthe"
+  summary?: string;
+  keyEvents?: string[];
+}
+
+interface HistoryEvent {
+  id: string;
+  label: string;        // "Inauguration de la fontaine", etc.
+  approxDate?: string;
+  eraRef?: string;      // id d’ère éventuel
+  summary?: string;
+  impact?: string;
+}
+
+interface HistoryCrisis {
+  name: string;         // "Effondrement du pont", "Massacre de la place"
+  period?: string;
+  type?: string;        // émeute, catastrophe, profanation...
+  description?: string;
+  consequences?: string;
+}
+
+interface HistoryAnecdote {
+  title: string;
+  type?: string;        // rumeur, légende, fait divers...
+  summary?: string;
+  truthStatus?: string; // "Probable", "Légende urbaine", etc.
+}
+
+interface PlaceHistoryData {
+  overview?: string;           // phrase d’accroche
+  originStory?: string;        // pourquoi ce lieu existe
+  foundingContext?: string;    // contexte historique/politique à sa création
+  symbolicRole?: string;       // rôle dans l’imaginaire / la ville / le royaume
+
+  eras?: HistoryEra[];
+  timelineEvents?: HistoryEvent[];
+  crisesAndEvents?: HistoryCrisis[];
+  legendsAndAnecdotes?: HistoryAnecdote[];
+
+  reputationToday?: string;    // comment ce lieu est vu à l’époque du récit
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  meta: MetaPlace;
+  history: PlaceHistoryData | null;
+}
+
+// ========= STATIC PATHS =========
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/places/*/meta.json");
+  const historyModules = import.meta.glob(
+    "@data/lieux/places/*/histoire.json"
+  );
+
+  const historyMap: Record<string, PlaceHistoryData> = {};
+
+  await Promise.all(
+    Object.entries(historyModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as PlaceHistoryData;
+
+      const match = path.match(/places\/([^/]+)\/histoire\.json$/);
+      const slug = match ? match[1] : "";
+      if (slug) historyMap[slug] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as MetaPlace;
+
+      const match = path.match(/places\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: {
+          slug,
+          meta,
+          history: historyMap[slug] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+// ========= LOAD PROPS =========
+
+const { slug, meta, history } = Astro.props as Props;
+const basePath = `/univers/lieux/places/${slug}`;
+---
+
+<PlaceLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  locationTag={meta.locationTag}
+  realmTag={meta.realmTag}
+  moodTag={meta.moodTag}
+  image={meta.headerImage}
+  basePath={basePath}
+  currentSection="histoire"
+>
+  <section class="card city-history-page">
+    <header class="page-header city-history-header">
+      <h2 class="section-title">Histoire du lieu</h2>
+
+      {history?.overview && (
+        <p class="page-subtitle">
+          {history.overview}
+        </p>
+      )}
+    </header>
+
+    {!history && (
+      <p class="object-empty">
+        Aucun fichier <code>histoire.json</code> trouvé pour ce lieu.<br />
+        Chemin attendu :
+        <code>src/data/lieux/places/{slug}/histoire.json</code>
+      </p>
+    )}
+
+    {history && (
+      <div class="city-history-grid">
+        {/* Colonne principale : origines, ères, crises, réputation */}
+        <div class="city-history-main">
+          {(history.originStory ||
+            history.foundingContext ||
+            history.symbolicRole) && (
+            <article class="object-block">
+              <h3 class="object-block-title">Origines & rôle</h3>
+
+              {history.originStory && (
+                <p class="history-text">
+                  {history.originStory}
+                </p>
+              )}
+
+              {history.foundingContext && (
+                <p class="history-text">
+                  {history.foundingContext}
+                </p>
+              )}
+
+              {history.symbolicRole && (
+                <p class="history-text">
+                  {history.symbolicRole}
+                </p>
+              )}
+            </article>
+          )}
+
+          {history.eras && history.eras.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Grandes périodes</h3>
+              <ul class="history-era-list">
+                {history.eras.map((era) => (
+                  <li class="history-era-item">
+                    <div class="history-era-header">
+                      <h4 class="history-era-name">{era.name}</h4>
+                      {era.period && (
+                        <span class="place-meta-pill">
+                          {era.period}
+                        </span>
+                      )}
+                    </div>
+                    {era.summary && (
+                      <p class="history-text">
+                        {era.summary}
+                      </p>
+                    )}
+                    {era.keyEvents && era.keyEvents.length > 0 && (
+                      <ul class="history-era-events">
+                        {era.keyEvents.map((evt) => (
+                          <li>{evt}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          )}
+
+          {history.crisesAndEvents &&
+            history.crisesAndEvents.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">
+                  Crises, profanations & événements marquants
+                </h3>
+                <ul class="history-crisis-list">
+                  {history.crisesAndEvents.map((c) => (
+                    <li class="history-crisis-item">
+                      <div class="history-crisis-header">
+                        <span class="history-crisis-name">{c.name}</span>
+                        {c.type && (
+                          <span class="place-meta-pill">
+                            {c.type}
+                          </span>
+                        )}
+                      </div>
+                      {c.period && (
+                        <p class="history-meta">
+                          Période : {c.period}
+                        </p>
+                      )}
+                      {c.description && (
+                        <p class="history-text">
+                          {c.description}
+                        </p>
+                      )}
+                      {c.consequences && (
+                        <p class="history-meta">
+                          Conséquences : {c.consequences}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+
+          {history.reputationToday && (
+            <article class="object-block">
+              <h3 class="object-block-title">Réputation actuelle</h3>
+              <p class="history-text">
+                {history.reputationToday}
+              </p>
+            </article>
+          )}
+
+          {history.notes && history.notes.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {history.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </article>
+          )}
+        </div>
+
+        {/* Colonne latérale : timeline + anecdotes */}
+        <aside class="city-history-aside">
+          {history.timelineEvents &&
+            history.timelineEvents.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Timeline du lieu</h3>
+                <ul class="history-timeline-list">
+                  {history.timelineEvents.map((evt) => (
+                    <li class="history-timeline-item">
+                      <div class="history-timeline-dot"></div>
+                      <div class="history-timeline-content">
+                        <div class="history-timeline-header">
+                          <span class="history-timeline-label">
+                            {evt.label}
+                          </span>
+                          {evt.approxDate && (
+                            <span class="history-timeline-date">
+                              {evt.approxDate}
+                            </span>
+                          )}
+                        </div>
+                        {evt.eraRef && (
+                          <p class="history-meta">
+                            Période : {evt.eraRef}
+                          </p>
+                        )}
+                        {evt.summary && (
+                          <p class="history-text">
+                            {evt.summary}
+                          </p>
+                        )}
+                        {evt.impact && (
+                          <p class="history-meta">
+                            Impact : {evt.impact}
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+          {history.legendsAndAnecdotes &&
+            history.legendsAndAnecdotes.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Légendes & anecdotes</h3>
+                <ul class="history-anecdote-list">
+                  {history.legendsAndAnecdotes.map((a) => (
+                    <li class="history-anecdote-item">
+                      <div class="history-anecdote-header">
+                        <span class="history-anecdote-title">
+                          {a.title}
+                        </span>
+                        {a.type && (
+                          <span class="place-meta-pill">
+                            {a.type}
+                          </span>
+                        )}
+                      </div>
+                      {a.summary && (
+                        <p class="history-text">
+                          {a.summary}
+                        </p>
+                      )}
+                      {a.truthStatus && (
+                        <p class="history-meta">
+                          Crédibilité : {a.truthStatus}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+        </aside>
+      </div>
+    )}
+  </section>
+</PlaceLayout>

@@ -5062,3 +5062,536 @@ body.gallery-modal-open {
   }
 }
 
+/* ==========================================
+   PAGE POPULATION – VILLES
+   ========================================== */
+
+.city-population-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.city-population-header {
+  margin-bottom: 0.4rem;
+}
+
+.city-population-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.1fr);
+  gap: 1.6rem;
+  margin-top: 0.4rem;
+}
+
+.city-pop-main,
+.city-pop-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* blocs population (reprend object-block mais permet des tweaks si besoin) */
+.pop-block {
+  position: relative;
+}
+
+/* petite grille de stats démographiques en haut */
+.pop-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.45rem;
+  margin-bottom: 0.2rem;
+}
+
+.pop-stat {
+  padding: 0.55rem 0.7rem;
+  border-radius: 999px;
+  border: 1px dashed rgba(216, 190, 143, 0.7);
+  background: #fffaf2;
+  font-size: 0.8rem;
+}
+
+.pop-stat-label {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.pop-stat-value {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-main);
+}
+
+/* texte principal des blocs */
+.pop-text {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+/* listes latérales (groupes, tensions, fêtes) */
+
+.pop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pop-item {
+  padding: 0.3rem 0;
+  border-bottom: 1px dashed rgba(216, 190, 143, 0.4);
+}
+
+.pop-item:last-child {
+  border-bottom: none;
+}
+
+.pop-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.1rem;
+}
+
+.pop-item-name {
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.pop-item-meta {
+  margin: 0.05rem 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.pop-item-text {
+  margin: 0.15rem 0 0;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+/* responsive */
+
+@media (max-width: 900px) {
+  .city-population-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* ==========================================
+   PAGE HISTOIRE – VILLES
+   ========================================== */
+
+.city-history-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.city-history-header {
+  margin-bottom: 0.2rem;
+}
+
+.city-history-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.1fr);
+  gap: 1.6rem;
+  margin-top: 0.4rem;
+}
+
+.city-history-main,
+.city-history-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.history-text {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-soft);
+}
+
+/* Grandes époques */
+
+.history-era-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.history-era-item {
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed rgba(216, 190, 143, 0.45);
+}
+
+.history-era-item:last-child {
+  border-bottom: none;
+}
+
+.history-era-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.1rem;
+}
+
+.history-era-name {
+  margin: 0;
+  font-size: 0.94rem;
+  font-family: var(--font-title);
+  color: var(--text-main);
+}
+
+.history-era-events {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+/* Crises */
+
+.history-crisis-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.history-crisis-item {
+  padding: 0.35rem 0;
+  border-left: 2px solid rgba(216, 190, 143, 0.5);
+  padding-left: 0.7rem;
+}
+
+.history-crisis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.history-crisis-name {
+  font-size: 0.9rem;
+  font-family: var(--font-title);
+  color: var(--text-main);
+}
+
+/* Timeline latérale */
+
+.history-timeline-list {
+  list-style: none;
+  margin: 0.1rem 0 0;
+  padding: 0;
+  position: relative;
+}
+
+.history-timeline-list::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(216, 190, 143, 0.75);
+}
+
+.history-timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: 0.6rem;
+  padding: 0.45rem 0;
+}
+
+.history-timeline-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #fff8ee;
+  border: 2px solid var(--gold-deep);
+  box-shadow: 0 0 0 3px rgba(216, 190, 143, 0.4);
+  margin-top: 0.2rem;
+}
+
+.history-timeline-content {
+  font-size: 0.86rem;
+}
+
+.history-timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.history-timeline-label {
+  font-family: var(--font-title);
+  font-size: 0.92rem;
+  color: var(--text-main);
+}
+
+.history-timeline-date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.history-meta {
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Anecdotes & légendes */
+
+.history-anecdote-list {
+  list-style: none;
+  margin: 0.1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.history-anecdote-item {
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed rgba(216, 190, 143, 0.4);
+}
+
+.history-anecdote-item:last-child {
+  border-bottom: none;
+}
+
+.history-anecdote-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.history-anecdote-title {
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .city-history-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   DASHBOARD / PAGE D'ACCUEIL PERSONNELLE
+   ========================================== */
+
+.home-dashboard .dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
+  gap: 1.4rem;
+  margin-top: 1.3rem;
+}
+
+/* Le focus prend toute la largeur en haut */
+.dashboard-focus {
+  grid-column: 1 / -1;
+}
+
+.dashboard-focus-text {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 0.92rem;
+  color: var(--text-soft);
+}
+
+/* =========================
+   TO-DO EN MODE "TABLEAU"
+   ========================= */
+
+.dashboard-todo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Colonnes "Prioritaire" / "Quand j'ai le temps", etc. */
+.dashboard-todo-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+/* Chaque colonne ressemble à un petit tableau encadré */
+.dashboard-todo-section {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(216, 190, 143, 0.8);
+  background: #fff8ee;
+  box-shadow: 0 6px 16px rgba(140, 110, 80, 0.18);
+  padding: 0.7rem 0.8rem 0.85rem;
+}
+
+.dashboard-todo-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-family: var(--font-title);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+/* La liste elle-même = lignes d’un tableau */
+.dashboard-todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Une ligne de tâche = ligne de tableau */
+.dashboard-todo-item {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.4fr);
+  column-gap: 0.75rem;
+  align-items: center;
+  padding: 0.45rem 0.3rem;
+  border-top: 1px solid rgba(216, 190, 143, 0.45);
+}
+
+.dashboard-todo-item:first-child {
+  border-top: none;
+}
+
+.dashboard-todo-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.dashboard-todo-label {
+  display: block;
+  font-size: 0.9rem;
+}
+
+/* "Colonnes" de droite : zone + statut sous forme de pills */
+.dashboard-todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.dashboard-todo-meta .place-meta-pill {
+  font-size: 0.72rem;
+  padding-inline: 0.55rem;
+}
+
+/* Sur mobile : on repasse en mode "2 lignes" propre */
+@media (max-width: 720px) {
+  .dashboard-todo-item {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.25rem;
+    align-items: flex-start;
+  }
+
+  .dashboard-todo-meta {
+    justify-content: flex-start;
+  }
+}
+
+/* ==========================================
+   DERNIERS AJOUTS – CARTES CLIQUABLES
+   ========================================== */
+
+.dashboard-recents {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.dashboard-recents-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Chaque élément = une mini carte encadrée, clairement cliquable */
+.dashboard-recents-item {
+  font-size: 0.88rem;
+}
+
+.dashboard-recents-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(216, 190, 143, 0.9);
+  background: #fffaf2;
+  box-shadow: 0 6px 14px rgba(120, 95, 65, 0.18);
+  padding: 0.55rem 0.7rem;
+  transition:
+    transform 120ms ease-out,
+    box-shadow 120ms ease-out,
+    border-color 120ms ease-out,
+    background 120ms ease-out;
+}
+
+/* Petit effet de survol pour rappeler les autres boutons du site */
+.dashboard-recents-link:hover,
+.dashboard-recents-link:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(120, 95, 65, 0.28);
+  border-color: var(--gold);
+  background: #fff5e7;
+  outline: none;
+}
+
+.dashboard-recents-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dashboard-recents-label {
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+.dashboard-recents-note {
+  margin: 0.18rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+}
+
+/* Responsive global pour la grille du dashboard */
+@media (max-width: 900px) {
+  .home-dashboard .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-focus {
+    grid-column: 1 / 2;
+  }
+}
+

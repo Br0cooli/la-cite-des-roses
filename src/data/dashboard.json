@@ -1,0 +1,51 @@
+{
+  "focusTitle": "",
+  "focusNote": "",
+
+  "scratchpadIdeas": [
+    ""
+  ],
+
+  "todoSections": [
+    {
+      "title": "",
+      "items": [
+        {
+          "label": "",
+          "area": "",
+          "status": ""
+        },
+        {
+          "label": "",
+          "area": "",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "title": "",
+      "items": [
+        {
+          "label": "",
+          "area": "",
+          "status": ""
+        },
+        {
+          "label": "",
+          "area": "",
+          "status": ""
+        }
+      ]
+    }
+  ],
+
+  "recentDocs": [
+    {
+      "label": "",
+      "type": "",
+      "path": "",
+      "note": "",
+      "link": ""
+    }
+  ]
+}

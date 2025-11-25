@@ -1,121 +1,146 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
+import dashboard from "@data/dashboard.json";
+
+interface TodoItem {
+  label: string;
+  area?: string;   // "Personnages", "Lieux", "Scénario", etc.
+  link?: string;   // lien vers la page concernée (optionnel)
+  status?: string; // "à faire", "en cours", "relecture", etc.
+}
+
+interface TodoSection {
+  title: string;       // "Prioritaire", "Quand j'ai le temps", etc.
+  items: TodoItem[];
+}
+
+interface RecentDoc {
+  label: string;       // "Fiche Delia — stats", "Aureval — économie"...
+  type?: string;       // "Personnage", "Lieu", "Objet", "Scénario", etc.
+  path: string;        // URL vers la page
+  note?: string;       // pourquoi c'est là / quoi faire dessus
+}
+
+interface DashboardData {
+  focusTitle?: string;
+  focusNote?: string;
+
+  todoSections?: TodoSection[];
+  recentDocs?: RecentDoc[];
+  scratchpadIdeas?: string[]; // mini-brain dump d'idées du moment
+}
+
+const data = dashboard as DashboardData;
 ---
 
-<BaseLayout title="La Cité des Roses — Portail de l'univers">
-  <section class="card">
+<BaseLayout title="La Cité des Roses — Tableau de bord">
+  <section class="card home-dashboard">
     <header class="page-header">
       <div class="page-header-main">
-        <h1 class="page-title">La Cité des Roses</h1>
+        <h1 class="page-title">Tableau de bord</h1>
         <p class="page-subtitle">
-          Encyclopédie de l’univers de Delia, Léandre & Aloïs&nbsp;: personnages, royaumes,
-          objets et drame royal en surchauffe.
-        </p>
-        <p class="page-intro">
-          Ce site rassemble tout le lore de ton monde&nbsp;:
-          fiches détaillées, cartes, chronologie, dynamique du triangle amoureux
-          et documents de travail de ton scénario.
+          Espace de travail.
         </p>
       </div>
     </header>
 
-    <div class="home-grid">
-      <!-- Bloc Univers -->
-      <a href="/univers/lieux/" class="home-block">
-        <h2>Lieux</h2>
-        <p>
-          Découvre Aureval, ses régions, ses villes, ses cartes et la géographie politique
-          qui encadre l’histoire.
-        </p>
-        <ul class="home-list">
-          <li>Fiches pays (Aureval, voisins...)</li>
-          <li>Capitales, empires, ports et villages</li>
-          <li>Cartes interactives & points d’intérêt</li>
-        </ul>
-      </a>
+    <div class="dashboard-grid">
+      <!-- FOCUS DU MOMENT -->
+      <section class="object-block dashboard-focus">
+        <h2 class="object-block-title">
+          {data.focusTitle || "Focus du moment"}
+        </h2>
 
-      <!-- Bloc Personnages -->
-      <a href="/personnages" class="home-block">
-        <h2>Personnages</h2>
-        <p>
-          La galerie complète des protagonistes, antagonistes, alliés et pièces maîtresses
-          du drame royal.
-        </p>
-        <ul class="home-list">
-          <li>Fiches complètes (général, stats, passé…)</li>
-          <li>Relations & dynamiques du triangle amoureux</li>
-          <li>Moodboards, interviews & inventaires</li>
-        </ul>
-      </a>
+        {data.scratchpadIdeas && data.scratchpadIdeas.length > 0 && (
+          <ul class="object-notes">
+            {data.scratchpadIdeas.map((idea) => (
+              <li>{idea}</li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-      <!-- Bloc Objets -->
-      <a href="/univers/objets" class="home-block">
-        <h2>Objets</h2>
-        <p>
-          Reliques, lettres, bijoux et artefacts qui portent la mémoire des personnages
-          et font avancer l’intrigue.
-        </p>
-        <ul class="home-list">
-          <li>Fiches d’objets story-relevants</li>
-          <li>Symbolique, charge émotionnelle</li>
-          <li>Moments clés où l’objet apparaît</li>
-        </ul>
-      </a>
+      <!-- TO-DO LIST -->
+      <section class="object-block dashboard-todo">
+        <h2 class="object-block-title">To-do</h2>
 
-      <!-- Bloc Scénario -->
-      <a href="/scenario" class="home-block">
-        <h2>Scénario</h2>
-        <p>
-          Vue d’ensemble de l’histoire&nbsp;: triangle amoureux, arcs, enjeux, thèmes
-          et structure en actes.
-        </p>
-        <ul class="home-list">
-          <li>Dynamique du triangle Delia · Aloïs · Léandre</li>
-          <li>Arcs individuels & trajectoires émotionnelles</li>
-          <li>Structure de l’intrigue & grands événements</li>
-        </ul>
-      </a>
+        {!data.todoSections || data.todoSections.length === 0 ? (
+          <p class="object-empty">
+            Aucune tâche pour l’instant.<br />
+            Ajoute des sections dans <code>dashboard.json</code> pour suivre
+            ce que tu dois faire.
+          </p>
+        ) : (
+          <div class="dashboard-todo-columns">
+            {data.todoSections.map((section) => (
+              <div class="dashboard-todo-section">
+                <h3 class="dashboard-todo-title">{section.title}</h3>
+                <ul class="dashboard-todo-list">
+                  {section.items.map((item) => (
+                    <li class="dashboard-todo-item">
+                      {item.link ? (
+                        <a href={item.link} class="dashboard-todo-link">
+                          <span class="dashboard-todo-label">{item.label}</span>
+                        </a>
+                      ) : (
+                        <span class="dashboard-todo-label">{item.label}</span>
+                      )}
+
+                      <div class="dashboard-todo-meta">
+                        {item.area && (
+                          <span class="place-meta-pill">
+                            {item.area}
+                          </span>
+                        )}
+                        {item.status && (
+                          <span class="place-meta-pill">
+                            {item.status}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <!-- DERNIERS AJOUTS / À REPRENDRE -->
+      <section class="object-block dashboard-recents">
+        <h2 class="object-block-title">Derniers ajouts</h2>
+
+        {!data.recentDocs || data.recentDocs.length === 0 ? (
+          <p class="object-empty">
+            Rien pour l’instant.<br />
+            Ajoute des entrées dans <code>recentDocs</code> dans
+            <code>dashboard.json</code> pour garder en vue ce sur quoi tu travailles.
+          </p>
+        ) : (
+          <ul class="dashboard-recents-list">
+            {data.recentDocs.map((doc) => (
+              <li class="dashboard-recents-item">
+                <a href={doc.path} class="dashboard-recents-link">
+                  <div class="dashboard-recents-main">
+                    <span class="dashboard-recents-label">{doc.label}</span>
+                    {doc.type && (
+                      <span class="place-meta-pill">
+                        {doc.type}
+                      </span>
+                    )}
+                  </div>
+                  {doc.note && (
+                    <p class="dashboard-recents-note">
+                      {doc.note}
+                    </p>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
-    <script>
-      // détecte si le dernier block est seul sur sa ligne, et le rend "wide"
-      (function () {
-        function updateHomeGrid() {
-          var grid = document.querySelector(".home-grid");
-          if (!grid) return;
-
-          var items = Array.prototype.slice.call(grid.children);
-          // on nettoie d'abord
-          items.forEach(function (el) {
-            el.classList.remove("home-block--wide");
-          });
-
-          if (items.length === 0) return;
-
-          var last = items[items.length - 1];
-          var beforeLast = items[items.length - 2];
-
-          // cas où il n'y a QU'UN seul block au total
-          if (!beforeLast) {
-            last.classList.add("home-block--wide");
-            return;
-          }
-
-          // si le dernier est sur une ligne différente du précédent
-          var lastTop = last.offsetTop;
-          var prevTop = beforeLast.offsetTop;
-
-          if (lastTop !== prevTop) {
-            last.classList.add("home-block--wide");
-          }
-        }
-
-        // appel au chargement + au resize
-        window.addEventListener("load", updateHomeGrid);
-        window.addEventListener("resize", function () {
-          clearTimeout(window.__homeGridTimeout);
-          window.__homeGridTimeout = setTimeout(updateHomeGrid, 100);
-        });
-      })();
-    </script>
   </section>
 </BaseLayout>

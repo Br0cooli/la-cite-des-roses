@@ -1,0 +1,62 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  // tags en haut du doc : ex "Triangle amoureux", "Scénario", "Doc de travail"
+  mainTag?: string;
+  secondaryTag?: string;
+  moodTag?: string;
+  extraTags?: string[];      // si tu veux rajouter d’autres mots-clés
+  children: AstroSlots["default"];
+}
+
+const {
+  title,
+  subtitle,
+  mainTag,
+  secondaryTag,
+  moodTag,
+  extraTags = []
+} = Astro.props as Props;
+---
+
+<BaseLayout title={`${title} — Scénario — La Cité des Roses`}>
+  <section class="card scenario-page">
+    {/* HEADER DOCUMENT SCÉNARIO */}
+    <header class="page-header">
+      <div class="page-header-main">
+        <h1 class="page-title">{title}</h1>
+
+        {subtitle && (
+          <p class="page-subtitle">
+            {subtitle}
+          </p>
+        )}
+
+        {(mainTag || secondaryTag || moodTag || extraTags.length > 0) && (
+          <div class="place-meta-row">
+            {mainTag && (
+              <span class="place-meta-pill">{mainTag}</span>
+            )}
+            {secondaryTag && (
+              <span class="place-meta-pill">{secondaryTag}</span>
+            )}
+            {moodTag && (
+              <span class="place-meta-pill">{moodTag}</span>
+            )}
+            {extraTags.map((tag) => (
+              <span class="place-meta-pill">{tag}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </header>
+
+    {/* CONTENU DU DOCUMENT */}
+    <div class="scenario-body">
+      <slot />
+    </div>
+  </section>
+</BaseLayout>

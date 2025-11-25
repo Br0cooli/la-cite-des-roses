@@ -1,0 +1,404 @@
+---
+import CityLayout from "@layouts/CityLayout.astro";
+
+interface LocalActivity {
+  name: string;
+  type?: string;          // ex : artisanat, marché, port, taverne, banque...
+  district?: string;      // ex : Quartier des Docks, Vieille Ville
+  description?: string;
+  clientele?: string;     // qui fréquente ce lieu / service
+}
+
+interface TradeFlow {
+  name: string;           // ex : "Route du sel", "Caravanes de l'Est"
+  direction?: string;     // import / export / transit
+  from?: string;
+  to?: string;
+  goods?: string;         // ce qui circule
+  description?: string;
+}
+
+interface MarketOrFair {
+  name: string;
+  frequency?: string;     // hebdomadaire, annuel...
+  specialization?: string; // bestiaux, tissus, luxe...
+  location?: string;
+  description?: string;
+  importance?: string;    // pourquoi c’est clé pour la ville
+}
+
+interface GuildOrActor {
+  name: string;
+  type?: string;          // guilde, famille marchande, office, banque...
+  headquarters?: string;  // où ils sont basés dans la ville
+  influenceZone?: string;
+  description?: string;
+}
+
+interface TaxOrRegulation {
+  name: string;
+  type?: string;          // taxe, péage, monopole, privilège...
+  target?: string;        // sur quoi / qui ça tombe
+  description?: string;
+  impact?: string;        // impact sur la vie de la ville
+}
+
+interface ShadowEconomy {
+  name: string;           // ex : "Port de nuit", "Réseau des receleurs"
+  domain?: string;        // contrebande, jeu, prostitution, faux papiers...
+  description?: string;
+  keyFigures?: string;    // rumeurs sur qui tire les ficelles
+}
+
+interface CityEconomyData {
+  overview?: string;
+
+  keyActivities?: LocalActivity[];  // activités emblématiques de la ville
+  marketsAndFairs?: MarketOrFair[];
+  tradeFlows?: TradeFlow[];
+  guildsAndActors?: GuildOrActor[];
+  taxesAndRules?: TaxOrRegulation[];
+  shadowSide?: ShadowEconomy[];
+
+  notes?: string[];
+}
+
+interface CityMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  regionTag?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
+interface Props {
+  slug: string;
+  meta: CityMeta;
+  economy: CityEconomyData | null;
+}
+
+const { slug, meta, economy } = Astro.props as Props;
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/villes/*/meta.json");
+  const ecoModules = import.meta.glob("@data/lieux/villes/*/economie.json");
+
+  const ecoMap: Record<string, CityEconomyData> = {};
+
+  await Promise.all(
+    Object.entries(ecoModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as CityEconomyData;
+
+      const match = path.match(/villes\/([^/]+)\/economie\.json$/);
+      const s = match ? match[1] : "";
+      if (s) ecoMap[s] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as CityMeta;
+
+      const match = path.match(/villes\/([^/]+)\/meta\.json$/);
+      const s = match ? match[1] : "";
+
+      return {
+        params: { slug: s },
+        props: {
+          slug: s,
+          meta: data,
+          economy: ecoMap[s] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const basePath = `/univers/lieux/villes/${slug}`;
+---
+
+<CityLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel || "Ville"}
+  regionTag={meta.regionTag}
+  populationApprox={meta.populationApprox}
+  keywords={meta.keywords}
+  basePath={basePath}
+  currentSection="economie"
+>
+  <section class="object-section">
+    <h2 class="section-title">Économie urbaine & vie commerçante</h2>
+
+    {economy?.overview && (
+      <p class="object-summary">
+        {economy.overview}
+      </p>
+    )}
+
+    {!economy && (
+      <p class="object-empty">
+        Aucun fichier <code>economie.json</code> trouvé.<br />
+        Chemin attendu&nbsp;:
+        <code>src/data/lieux/villes/{slug}/economie.json</code>.
+      </p>
+    )}
+
+    {economy && (
+      <>
+        <div class="country-general-grid">
+          {/* Colonne principale : activités, marchés, flux */}
+          <div class="country-main">
+            {economy.keyActivities && economy.keyActivities.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">
+                  Activités emblématiques de la ville
+                </h3>
+                <ul class="eco-list">
+                  {economy.keyActivities.map((a) => (
+                    <li class="eco-item">
+                      <div class="eco-item-header">
+                        <span class="eco-item-name">{a.name}</span>
+                        {a.type && (
+                          <span class="eco-item-tag">{a.type}</span>
+                        )}
+                      </div>
+
+                      {a.district && (
+                        <p class="eco-item-note">
+                          Quartier&nbsp;: {a.district}
+                        </p>
+                      )}
+
+                      {a.description && (
+                        <p class="eco-item-desc">{a.description}</p>
+                      )}
+
+                      {a.clientele && (
+                        <p class="eco-item-note">
+                          Clientèle&nbsp;: {a.clientele}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+
+            {economy.marketsAndFairs &&
+              economy.marketsAndFairs.length > 0 && (
+                <article class="object-block">
+                  <h3 class="object-block-title">
+                    Marchés & foires
+                  </h3>
+                  <ul class="eco-list">
+                    {economy.marketsAndFairs.map((m) => (
+                      <li class="eco-item">
+                        <div class="eco-item-header">
+                          <span class="eco-item-name">{m.name}</span>
+                          {m.specialization && (
+                            <span class="eco-item-tag">
+                              {m.specialization}
+                            </span>
+                          )}
+                        </div>
+
+                        {m.frequency && (
+                          <p class="eco-item-note">
+                            Fréquence&nbsp;: {m.frequency}
+                          </p>
+                        )}
+
+                        {m.location && (
+                          <p class="eco-item-note">
+                            Lieu&nbsp;: {m.location}
+                          </p>
+                        )}
+
+                        {m.description && (
+                          <p class="eco-item-desc">{m.description}</p>
+                        )}
+
+                        {m.importance && (
+                          <p class="eco-item-note">
+                            Importance&nbsp;: {m.importance}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+            {economy.tradeFlows && economy.tradeFlows.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">
+                  Flux commerciaux & routes
+                </h3>
+                <ul class="eco-list">
+                  {economy.tradeFlows.map((t) => (
+                    <li class="eco-item">
+                      <div class="eco-item-header">
+                        <span class="eco-item-name">{t.name}</span>
+                        {t.direction && (
+                          <span class="eco-item-tag">
+                            {t.direction}
+                          </span>
+                        )}
+                      </div>
+
+                      {(t.from || t.to) && (
+                        <p class="eco-item-note">
+                          {t.from && <>De&nbsp;{t.from}</>}
+                          {t.from && t.to && " → "}
+                          {t.to && <>vers&nbsp;{t.to}</>}
+                        </p>
+                      )}
+
+                      {t.goods && (
+                        <p class="eco-item-note">
+                          Marchandises&nbsp;: {t.goods}
+                        </p>
+                      )}
+
+                      {t.description && (
+                        <p class="eco-item-desc">{t.description}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            )}
+          </div>
+
+          {/* Colonne latérale : guildes, fiscalité, économie de l’ombre */}
+          <aside class="country-aside">
+            {economy.guildsAndActors &&
+              economy.guildsAndActors.length > 0 && (
+                <article class="object-block">
+                  <h3 class="object-block-title">
+                    Guildes & acteurs économiques
+                  </h3>
+                  <ul class="eco-list">
+                    {economy.guildsAndActors.map((g) => (
+                      <li class="eco-item">
+                        <div class="eco-item-header">
+                          <span class="eco-item-name">{g.name}</span>
+                          {g.type && (
+                            <span class="eco-item-tag">{g.type}</span>
+                          )}
+                        </div>
+
+                        {g.headquarters && (
+                          <p class="eco-item-note">
+                            Siège&nbsp;: {g.headquarters}
+                          </p>
+                        )}
+
+                        {g.influenceZone && (
+                          <p class="eco-item-note">
+                            Influence&nbsp;: {g.influenceZone}
+                          </p>
+                        )}
+
+                        {g.description && (
+                          <p class="eco-item-desc">{g.description}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+            {economy.taxesAndRules &&
+              economy.taxesAndRules.length > 0 && (
+                <article class="object-block">
+                  <h3 class="object-block-title">
+                    Taxes, péages & règles du jeu
+                  </h3>
+                  <ul class="eco-list">
+                    {economy.taxesAndRules.map((r) => (
+                      <li class="eco-item">
+                        <div class="eco-item-header">
+                          <span class="eco-item-name">{r.name}</span>
+                          {r.type && (
+                            <span class="eco-item-tag">{r.type}</span>
+                          )}
+                        </div>
+
+                        {r.target && (
+                          <p class="eco-item-note">
+                            Cible&nbsp;: {r.target}
+                          </p>
+                        )}
+
+                        {r.description && (
+                          <p class="eco-item-desc">{r.description}</p>
+                        )}
+
+                        {r.impact && (
+                          <p class="eco-item-note">
+                            Impact&nbsp;: {r.impact}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+            {economy.shadowSide &&
+              economy.shadowSide.length > 0 && (
+                <article class="object-block">
+                  <h3 class="object-block-title">
+                    Économie de l’ombre
+                  </h3>
+                  <ul class="eco-list">
+                    {economy.shadowSide.map((s) => (
+                      <li class="eco-item">
+                        <div class="eco-item-header">
+                          <span class="eco-item-name">{s.name}</span>
+                          {s.domain && (
+                            <span class="eco-item-tag is-danger">
+                              {s.domain}
+                            </span>
+                          )}
+                        </div>
+
+                        {s.description && (
+                          <p class="eco-item-desc">{s.description}</p>
+                        )}
+
+                        {s.keyFigures && (
+                          <p class="eco-item-note">
+                            Rumeurs&nbsp;: {s.keyFigures}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+
+            {economy.notes && economy.notes.length > 0 && (
+              <article class="object-block">
+                <h3 class="object-block-title">Notes & détails</h3>
+                <ul class="object-notes">
+                  {economy.notes.map((n) => (
+                    <li>{n}</li>
+                  ))}
+                </ul>
+              </article>
+            )}
+          </aside>
+        </div>
+      </>
+    )}
+  </section>
+</CityLayout>

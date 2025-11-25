@@ -1,0 +1,296 @@
+---
+import PlaceLayout from "@layouts/PlaceLayout.astro";
+
+interface MetaPlace {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;      // Place, Fontaine, Forêt, Monument...
+  locationTag?: string;    // ex : "Aubérac"
+  realmTag?: string;       // ex : "Royaume d’Aureval"
+  moodTag?: string;        // ex : "Lieu de pèlerinage"
+  headerImage?: string;
+  [key: string]: any;
+}
+
+interface PlaceViewpoint {
+  name: string;
+  direction?: string;      // ex : "Vers le port", "Sur la cathédrale"
+  description?: string;
+}
+
+interface PlacePath {
+  name: string;
+  type?: string;           // ruelle, escalier, sentier, pont...
+  connectsTo?: string;     // ce que ça rejoint
+  description?: string;
+}
+
+interface NearbyElement {
+  name: string;
+  type?: string;           // bâtiment, parc, rivière...
+  distance?: string;       // "à quelques pas", "en contrebas", etc.
+  description?: string;
+}
+
+interface PlaceHazard {
+  name: string;            // "Zone glissante", "Brouillard dense"
+  type?: string;           // météo, relief, foule, criminalité...
+  description?: string;
+}
+
+interface PlaceGeographyData {
+  locationSummary?: string;      // phrase d’ensemble : où est le lieu, comment il s’inscrit
+  physicalLayout?: string;       // forme du lieu : vaste, étroit, enclavé, en terrasse...
+  reliefAndLevel?: string;       // dénivelés, escaliers, pentes, surplombs
+  surroundings?: string;         // ce qui l’entoure immédiatement
+  accessAndCirculation?: string; // comment on y arrive, comment on y circule
+  atmosphereDetails?: string;    // sons, odeurs, lumière, foule
+  risksAndConstraints?: string;  // pièges, dangers, contraintes pratiques
+
+  viewpoints?: PlaceViewpoint[];
+  pathsAndConnections?: PlacePath[];
+  nearbyElements?: NearbyElement[];
+  hazardZones?: PlaceHazard[];
+
+  notes?: string[];              // petites notes d’autrice
+}
+
+interface Props {
+  slug: string;
+  meta: MetaPlace;
+  geo: PlaceGeographyData | null;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/places/*/meta.json");
+  const geoModules = import.meta.glob("@data/lieux/places/*/geographie.json");
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as MetaPlace;
+
+      const match = path.match(/places\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      let geo: PlaceGeographyData | null = null;
+      const geoPath = path.replace("meta.json", "geographie.json");
+      const geoResolver = geoModules[geoPath];
+
+      if (geoResolver) {
+        const geoMod: any = await geoResolver();
+        geo = (geoMod?.default ?? geoMod) as PlaceGeographyData;
+      }
+
+      return {
+        params: { slug },
+        props: { slug, meta, geo }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { slug, meta, geo } = Astro.props as Props;
+const basePath = `/univers/lieux/places/${slug}`;
+---
+
+<PlaceLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  locationTag={meta.locationTag}
+  realmTag={meta.realmTag}
+  moodTag={meta.moodTag}
+  image={meta.headerImage}
+  basePath={basePath}
+  currentSection="geographie"
+>
+  <section class="object-section">
+    <h2 class="section-title">Géographie & implantation du lieu</h2>
+
+    {geo?.locationSummary && (
+      <p class="object-summary">
+        {geo.locationSummary}
+      </p>
+    )}
+
+    {!geo && (
+      <p class="object-empty">
+        Aucun fichier <code>geographie.json</code> trouvé pour ce lieu.<br />
+        Chemin attendu :<br />
+        <code>src/data/lieux/places/{slug}/geographie.json</code>
+      </p>
+    )}
+
+    {geo && (
+      <div class="country-general-grid">
+        {/* Colonne principale : description détaillée */}
+        <div class="country-main">
+          {(geo.physicalLayout ||
+            geo.reliefAndLevel ||
+            geo.surroundings) && (
+            <article class="object-block">
+              <h3 class="object-block-title">Configuration du lieu</h3>
+
+              {geo.physicalLayout && (
+                <p>
+                  {geo.physicalLayout}
+                </p>
+              )}
+
+              {geo.reliefAndLevel && (
+                <p>
+                  {geo.reliefAndLevel}
+                </p>
+              )}
+
+              {geo.surroundings && (
+                <p>
+                  {geo.surroundings}
+                </p>
+              )}
+            </article>
+          )}
+
+          {geo.accessAndCirculation && (
+            <article class="object-block">
+              <h3 class="object-block-title">Accès & circulation</h3>
+              <p>
+                {geo.accessAndCirculation}
+              </p>
+            </article>
+          )}
+
+          {geo.atmosphereDetails && (
+            <article class="object-block">
+              <h3 class="object-block-title">Ambiance & sensations</h3>
+              <p>
+                {geo.atmosphereDetails}
+              </p>
+            </article>
+          )}
+
+          {geo.risksAndConstraints && (
+            <article class="object-block">
+              <h3 class="object-block-title">Contraintes & zones délicates</h3>
+              <p>
+                {geo.risksAndConstraints}
+              </p>
+            </article>
+          )}
+
+          {geo.notes && geo.notes.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {geo.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </article>
+          )}
+        </div>
+
+        {/* Colonne latérale : points de vue, connexions, alentours, risques */}
+        <aside class="country-aside">
+          {geo.viewpoints && geo.viewpoints.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Points de vue remarquables</h3>
+              <ul class="geo-list">
+                {geo.viewpoints.map((v) => (
+                  <li class="geo-item">
+                    <div class="geo-item-head">
+                      <span class="geo-item-name">{v.name}</span>
+                      {v.direction && (
+                        <span class="place-meta-pill">
+                          {v.direction}
+                        </span>
+                      )}
+                    </div>
+                    {v.description && <p>{v.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {geo.pathsAndConnections &&
+            geo.pathsAndConnections.length > 0 && (
+              <section class="object-block">
+                <h3 class="object-block-title">Chemins & connexions</h3>
+                <ul class="geo-list">
+                  {geo.pathsAndConnections.map((p) => (
+                    <li class="geo-item">
+                      <div class="geo-item-head">
+                        <span class="geo-item-name">{p.name}</span>
+                        {p.type && (
+                          <span class="place-meta-pill">
+                            {p.type}
+                          </span>
+                        )}
+                      </div>
+                      {p.connectsTo && (
+                        <p class="geo-item-note">
+                          Mène vers : {p.connectsTo}
+                        </p>
+                      )}
+                      {p.description && <p>{p.description}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+          {geo.nearbyElements && geo.nearbyElements.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Environnement immédiat</h3>
+              <ul class="geo-list">
+                {geo.nearbyElements.map((n) => (
+                  <li class="geo-item">
+                    <div class="geo-item-head">
+                      <span class="geo-item-name">{n.name}</span>
+                      {n.type && (
+                        <span class="place-meta-pill">
+                          {n.type}
+                        </span>
+                      )}
+                    </div>
+                    {n.distance && (
+                      <p class="geo-item-note">
+                        Distance : {n.distance}
+                      </p>
+                    )}
+                    {n.description && <p>{n.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {geo.hazardZones && geo.hazardZones.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Zones à risque</h3>
+              <ul class="geo-list">
+                {geo.hazardZones.map((z) => (
+                  <li class="geo-item">
+                    <div class="geo-item-head">
+                      <span class="geo-item-name">{z.name}</span>
+                      {z.type && (
+                        <span class="place-meta-pill">
+                          {z.type}
+                        </span>
+                      )}
+                    </div>
+                    {z.description && <p>{z.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
+    )}
+  </section>
+</PlaceLayout>

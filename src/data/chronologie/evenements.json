@@ -1,44 +1,9 @@
 [
   {
-    "annee": 0,
-    "plot": "principal",
-    "titre": "Nuit des deux naissances",
-    "description": "Échange des bébés, naissance du mensonge fondateur.",
-    "detail": "Cette nuit-là, l’orage couvre les cris des deux femmes..."
-  },
-  {
-    "annee": 10,
-    "plot": "delia_leandre",
-    "titre": "Léandre entre à la garde",
-    "description": "Premiers contacts entre Delia et Léandre au palais.",
-    "detail": "Cette nuit-là, l’orage couvre les cris des deux femmes..."
-  },
-  {
-    "annee": 15,
-    "plot": "delia_alois",
-    "titre": "Négociation du mariage",
-    "description": "Arrivée officielle d'Aloïs dans les intrigues du royaume.",
-    "detail": "Cette nuit-là, l’orage couvre les cris des deux femmes..."
-  },
-  {
-    "annee": 18,
-    "plot": "principal",
-    "titre": "Crise politique ouverte",
-    "description": "Les rumeurs sur la légitimité de Delia commencent à circuler.",
-    "detail": "Cette nuit-là, l’orage couvre les cris des deux femmes..."
-  },
-  {
-    "annee": 20,
-    "plot": "delia_leandre",
-    "titre": "Serment de Léandre",
-    "description": "Léandre promet sa loyauté à Delia, quoi qu'il en coûte.",
-    "detail": "Cette nuit-là, l’orage couvre les cris des deux femmes..."
-  },
-  {
-    "annee": 20,
-    "plot": "delia_alois",
-    "titre": "Mariage officiel",
-    "description": "Delia épouse Aloïs pour des raisons politiques.",
-    "detail": "Cette nuit-là, l’orage couvre les cris des deux femmes..."
+    "annee": null,
+    "plot": "",
+    "titre": "",
+    "description": "",
+    "detail": ""
   }
 ]

@@ -1,0 +1,322 @@
+---
+import CityLayout from "@layouts/CityLayout.astro";
+
+interface CityMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  regionTag?: string;
+  emblem?: string;
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
+interface PopulationGroup {
+  name: string;
+  type?: string;         // Guilde, communauté, famille, caste...
+  sizeNote?: string;     // "Nombreux", "Minorité", "Petite élite", etc.
+  influence?: string;    // "Très influent", "Invisible mais central", etc.
+  description?: string;
+}
+
+interface SocialTension {
+  name: string;
+  parties?: string;      // "Nobles vs marchands", etc.
+  cause?: string;
+  currentState?: string; // "Larvée", "Ouverte", "Réprimée", etc.
+}
+
+interface CustomOrFestival {
+  name: string;
+  season?: string;       // "Printemps", "Été", "Fin d'automne"...
+  importance?: string;   // "Très populaire", "Cérémonie officielle", etc.
+  description?: string;
+}
+
+interface CityPopulationData {
+  overview?: string;              // Portrait global de la population
+  demographyIntro?: string;       // Intro démographique
+  approxPopulation?: string;      // Taille approximative
+  density?: string;               // Densité, sensation de foule
+  ageStructure?: string;          // Jeune, vieillissante, etc.
+  originsAndMinorities?: string;  // Origines, minorités, peuples présents
+  socialClasses?: string;         // Découpage en classes / ordres
+  professionsAndGuilds?: string;  // Professions dominantes, guildes
+  lifestyles?: string;            // Mode de vie, rythme, ambiance sociale
+  religionAndBeliefs?: string;    // Culte, superstition, clergé
+  publicSpaces?: string;          // Places, marchés, tavernes, lieux où on se croise
+  groups?: PopulationGroup[];
+  tensions?: SocialTension[];
+  customsAndFestivals?: CustomOrFestival[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  meta: CityMeta;
+  pop: CityPopulationData | null;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/villes/*/meta.json");
+  const popModules = import.meta.glob("@data/lieux/villes/*/population.json");
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as CityMeta;
+
+      const match = path.match(/villes\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      let pop: CityPopulationData | null = null;
+      const popPath = path.replace("meta.json", "population.json");
+      const popResolver = popModules[popPath];
+
+      if (popResolver) {
+        const popMod: any = await popResolver();
+        pop = (popMod?.default ?? popMod) as CityPopulationData;
+      }
+
+      return {
+        params: { slug },
+        props: { slug, meta, pop }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { slug, meta, pop } = Astro.props as Props;
+const basePath = `/univers/lieux/villes/${slug}`;
+---
+
+<CityLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
+  populationApprox={meta.populationApprox}
+  basePath={basePath}
+  currentSection="population"
+>
+  <section class="card city-population-page">
+    <header class="page-header city-population-header">
+      <h2 class="section-title">Population & société</h2>
+      {pop?.overview && (
+        <p class="page-subtitle">
+          {pop.overview}
+        </p>
+      )}
+    </header>
+
+    {!pop && (
+      <p class="object-empty">
+        Aucun fichier <code>population.json</code> trouvé pour cette ville.<br />
+        Chemin attendu :<br />
+        <code>src/data/lieux/villes/{slug}/population.json</code>
+      </p>
+    )}
+
+    {pop && (
+      <div class="city-population-grid">
+        {/* Colonne principale : portrait social détaillé */}
+        <div class="city-pop-main">
+          {(pop.approxPopulation || pop.density || pop.ageStructure) && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Portrait démographique</h3>
+              <div class="pop-stats-row">
+                {pop.approxPopulation && (
+                  <div class="pop-stat">
+                    <p class="pop-stat-label">Taille de la population</p>
+                    <p class="pop-stat-value">{pop.approxPopulation}</p>
+                  </div>
+                )}
+                {pop.density && (
+                  <div class="pop-stat">
+                    <p class="pop-stat-label">Densité & ambiance</p>
+                    <p class="pop-stat-value">{pop.density}</p>
+                  </div>
+                )}
+                {pop.ageStructure && (
+                  <div class="pop-stat">
+                    <p class="pop-stat-label">Structure d’âge</p>
+                    <p class="pop-stat-value">{pop.ageStructure}</p>
+                  </div>
+                )}
+              </div>
+              {pop.demographyIntro && (
+                <p class="pop-text">
+                  {pop.demographyIntro}
+                </p>
+              )}
+            </section>
+          )}
+
+          {pop.originsAndMinorities && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Origines & minorités</h3>
+              <p class="pop-text">
+                {pop.originsAndMinorities}
+              </p>
+            </section>
+          )}
+
+          {pop.socialClasses && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Classes & couche sociale</h3>
+              <p class="pop-text">
+                {pop.socialClasses}
+              </p>
+            </section>
+          )}
+
+          {pop.professionsAndGuilds && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Professions & guildes</h3>
+              <p class="pop-text">
+                {pop.professionsAndGuilds}
+              </p>
+            </section>
+          )}
+
+          {pop.lifestyles && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Mode de vie & quotidien</h3>
+              <p class="pop-text">
+                {pop.lifestyles}
+              </p>
+            </section>
+          )}
+
+          {pop.religionAndBeliefs && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Religion & croyances</h3>
+              <p class="pop-text">
+                {pop.religionAndBeliefs}
+              </p>
+            </section>
+          )}
+
+          {pop.publicSpaces && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Espaces publics & sociabilité</h3>
+              <p class="pop-text">
+                {pop.publicSpaces}
+              </p>
+            </section>
+          )}
+
+          {pop.notes && pop.notes.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {pop.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        {/* Colonne latérale : groupes, tensions, coutumes */}
+        <aside class="city-pop-aside">
+          {pop.groups && pop.groups.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Groupes & communautés</h3>
+              <ul class="pop-list">
+                {pop.groups.map((g) => (
+                  <li class="pop-item">
+                    <div class="pop-item-head">
+                      <span class="pop-item-name">{g.name}</span>
+                      {(g.type || g.sizeNote) && (
+                        <span class="place-meta-pill">
+                          {g.type}
+                          {g.type && g.sizeNote && " — "}
+                          {g.sizeNote}
+                        </span>
+                      )}
+                    </div>
+                    {g.influence && (
+                      <p class="pop-item-meta">
+                        Influence : {g.influence}
+                      </p>
+                    )}
+                    {g.description && (
+                      <p class="pop-item-text">
+                        {g.description}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {pop.tensions && pop.tensions.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Tensions & fractures sociales</h3>
+              <ul class="pop-list">
+                {pop.tensions.map((t) => (
+                  <li class="pop-item">
+                    <div class="pop-item-head">
+                      <span class="pop-item-name">{t.name}</span>
+                    </div>
+                    {t.parties && (
+                      <p class="pop-item-meta">
+                        Parties en présence : {t.parties}
+                      </p>
+                    )}
+                    {t.cause && (
+                      <p class="pop-item-text">
+                        Cause : {t.cause}
+                      </p>
+                    )}
+                    {t.currentState && (
+                      <p class="pop-item-meta">
+                        Situation actuelle : {t.currentState}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {pop.customsAndFestivals && pop.customsAndFestivals.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Coutumes & fêtes</h3>
+              <ul class="pop-list">
+                {pop.customsAndFestivals.map((f) => (
+                  <li class="pop-item">
+                    <div class="pop-item-head">
+                      <span class="pop-item-name">{f.name}</span>
+                      {f.season && (
+                        <span class="place-meta-pill">
+                          {f.season}
+                        </span>
+                      )}
+                    </div>
+                    {f.importance && (
+                      <p class="pop-item-meta">
+                        Importance : {f.importance}
+                      </p>
+                    )}
+                    {f.description && (
+                      <p class="pop-item-text">
+                        {f.description}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
+    )}
+  </section>
+</CityLayout>

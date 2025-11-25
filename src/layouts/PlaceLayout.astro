@@ -1,0 +1,120 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+interface Props {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;       // Place, Fontaine, Forêt, Monument...
+  locationTag?: string;     // ex : "Ville d’Aubérac", "Forêt d’Aureval"
+  realmTag?: string;        // ex : "Royaume d’Aureval"
+  moodTag?: string;         // ex : "Lieu de pèlerinage", "Quartier populaire"
+  image?: string;           // image d’en-tête, optionnelle
+  basePath: string;         // ex : "/univers/lieux/places/place-du-lys"
+  currentSection: string;   // "general", "geographie", "histoire", etc.
+  children: AstroSlots["default"];
+}
+
+const {
+  name,
+  subtitle,
+  typeLabel = "Lieu",
+  locationTag,
+  realmTag,
+  moodTag,
+  image,
+  basePath,
+  currentSection
+} = Astro.props as Props;
+
+// On nettoie le basePath pour éviter les "//"
+const normalizedBasePath = (basePath || "").replace(/\/+$/, "");
+
+// Sections génériques pour un lieu classique
+const sections = [
+  { id: "general",    label: "Général" },
+  { id: "geographie", label: "Géographie" },
+  { id: "histoire",   label: "Histoire" },
+  { id: "usages",     label: "Fréquentation" },
+  { id: "galerie",    label: "Galerie" }
+];
+---
+
+<BaseLayout title={name ? `${name} — Lieu` : "Lieu"}>
+  <div class="card">
+    {/* HEADER DU LIEU */}
+    <header class="place-header">
+      <div class="place-header-main">
+        <div class="place-header-text">
+          {typeLabel && (
+            <p class="place-type">
+              {typeLabel}
+            </p>
+          )}
+
+          <h1 class="place-name">
+            {name}
+          </h1>
+
+          {subtitle && (
+            <p class="place-subtitle">
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        <div class="place-meta-row">
+          {locationTag && (
+            <span class="place-meta-pill">
+              {locationTag}
+            </span>
+          )}
+
+          {realmTag && (
+            <span class="place-meta-pill">
+              {realmTag}
+            </span>
+          )}
+
+          {moodTag && (
+            <span class="place-meta-pill">
+              {moodTag}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {image && (
+        <div class="place-header-image">
+          <img src={image} alt={name} loading="lazy" />
+        </div>
+      )}
+    </header>
+
+    {/* LAYOUT PRINCIPAL : NAV LATERALE + CONTENU */}
+    <div class="place-layout">
+      <aside>
+        <nav class="place-nav">
+          {sections.map((s) => {
+            const isActive = currentSection === s.id;
+            const href = `${normalizedBasePath}/${s.id}`;
+            return (
+              <a
+                href={href}
+                class={
+                  "place-nav-link" +
+                  (isActive ? " is-active" : "")
+                }
+              >
+                {s.label}
+              </a>
+            );
+          })}
+        </nav>
+      </aside>
+
+      <div class="place-content">
+        <slot />
+      </div>
+    </div>
+  </div>
+</BaseLayout>

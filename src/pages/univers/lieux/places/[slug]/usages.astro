@@ -1,0 +1,325 @@
+---
+import PlaceLayout from "@layouts/PlaceLayout.astro";
+
+interface MetaPlace {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;      // Place, Fontaine, Forêt, Monument...
+  locationTag?: string;
+  realmTag?: string;
+  moodTag?: string;
+  headerImage?: string;
+  [key: string]: any;
+}
+
+interface UserGroup {
+  name: string;            // "Marchands ambulants", "Nobles", "Enfants du quartier"
+  type?: string;           // Habitants, visiteurs, pèlerins, soldats...
+  typicalPresence?: string; // "Aube", "Fin d’après-midi", "Seulement les jours de marché"
+  attitude?: string;       // "Bruyants", "Discrets", "Sur leurs gardes"...
+  description?: string;
+}
+
+interface TimeSlice {
+  label: string;           // "Aube", "Midi", "Nuit", "Fin de semaine"
+  period?: string;         // "Avant l'ouverture des échoppes", etc.
+  description?: string;    // ce qui se passe concrètement
+}
+
+interface SpecialUse {
+  name: string;            // "Cérémonies", "Duels discrets", "Rendez-vous secrets"
+  season?: string;         // "Hiver", "Printemps", "Toute l’année"
+  frequency?: string;      // "Rare", "Hebdomadaire", "Annuel"
+  description?: string;
+}
+
+interface PlaceUsageData {
+  overview?: string;             // résumé d’ensemble : qui utilise le lieu, pour quoi
+  mainFunctions?: string;        // fonctions principales (transit, rassemblement, commerce, culte)
+  typicalCrowd?: string;         // type de population la plus présente
+  socialDynamic?: string;        // ambiance sociale (mélange des classes, tensions, hiérarchie)
+  timePatterns?: string;         // cycles jour/nuit, semaine, saisons
+  rulesAndEtiquette?: string;    // règles implicites, étiquette sociale, tabous
+  securityAndControl?: string;   // garde, contrôle, surveillance, auto-régulation
+  noiseAndAtmosphere?: string;   // niveau sonore, énergie du lieu
+  economicPresence?: string;     // usages liés au commerce, petits métiers, mendicité
+  forbiddenOrTaboo?: string;     // usages mal vus / dangereux
+
+  userGroups?: UserGroup[];
+  timeSlices?: TimeSlice[];
+  specialUses?: SpecialUse[];
+
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  meta: MetaPlace;
+  usage: PlaceUsageData | null;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/places/*/meta.json");
+  const usageModules = import.meta.glob("@data/lieux/places/*/usages.json");
+
+  const usageMap: Record<string, PlaceUsageData> = {};
+
+  await Promise.all(
+    Object.entries(usageModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as PlaceUsageData;
+
+      const match = path.match(/places\/([^/]+)\/usages\.json$/);
+      const slug = match ? match[1] : "";
+      if (slug) usageMap[slug] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as MetaPlace;
+
+      const match = path.match(/places\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: {
+          slug,
+          meta,
+          usage: usageMap[slug] || null
+        }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { slug, meta, usage } = Astro.props as Props;
+const basePath = `/univers/lieux/places/${slug}`;
+---
+
+<PlaceLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  locationTag={meta.locationTag}
+  realmTag={meta.realmTag}
+  moodTag={meta.moodTag}
+  image={meta.headerImage}
+  basePath={basePath}
+  currentSection="usages"
+>
+  <section class="card city-population-page">
+    <header class="page-header city-population-header">
+      <h2 class="page-title">Fréquentation & usages</h2>
+
+      {usage?.overview && (
+        <p class="page-subtitle">
+          {usage.overview}
+        </p>
+      )}
+    </header>
+
+    {!usage && (
+      <p class="object-empty">
+        Aucun fichier <code>usages.json</code> trouvé pour ce lieu.<br />
+        Chemin attendu :
+        <code>src/data/lieux/places/{slug}/usages.json</code>
+      </p>
+    )}
+
+    {usage && (
+      <div class="city-population-grid">
+        {/* Colonne principale : grandes dynamiques d’usage */}
+        <div class="city-pop-main">
+          {(usage.mainFunctions ||
+            usage.typicalCrowd ||
+            usage.socialDynamic) && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Rôle social du lieu</h3>
+
+              {usage.mainFunctions && (
+                <p class="pop-text">
+                  {usage.mainFunctions}
+                </p>
+              )}
+
+              {usage.typicalCrowd && (
+                <p class="pop-text">
+                  {usage.typicalCrowd}
+                </p>
+              )}
+
+              {usage.socialDynamic && (
+                <p class="pop-text">
+                  {usage.socialDynamic}
+                </p>
+              )}
+            </section>
+          )}
+
+          {usage.timePatterns && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Rythmes & temporalités</h3>
+              <p class="pop-text">
+                {usage.timePatterns}
+              </p>
+            </section>
+          )}
+
+          {usage.rulesAndEtiquette && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Règles implicites & étiquette</h3>
+              <p class="pop-text">
+                {usage.rulesAndEtiquette}
+              </p>
+            </section>
+          )}
+
+          {usage.economicPresence && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Présence économique</h3>
+              <p class="pop-text">
+                {usage.economicPresence}
+              </p>
+            </section>
+          )}
+
+          {usage.securityAndControl && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Contrôle & sécurité</h3>
+              <p class="pop-text">
+                {usage.securityAndControl}
+              </p>
+            </section>
+          )}
+
+          {usage.noiseAndAtmosphere && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Bruit & atmosphère</h3>
+              <p class="pop-text">
+                {usage.noiseAndAtmosphere}
+              </p>
+            </section>
+          )}
+
+          {usage.forbiddenOrTaboo && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Usages mal vus ou tabous</h3>
+              <p class="pop-text">
+                {usage.forbiddenOrTaboo}
+              </p>
+            </section>
+          )}
+
+          {usage.notes && usage.notes.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {usage.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        {/* Colonne latérale : groupes, rythmes, usages spéciaux */}
+        <aside class="city-pop-aside">
+          {usage.userGroups && usage.userGroups.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Groupes qui fréquentent le lieu</h3>
+              <ul class="pop-list">
+                {usage.userGroups.map((g) => (
+                  <li class="pop-item">
+                    <div class="pop-item-head">
+                      <span class="pop-item-name">{g.name}</span>
+                      {g.type && (
+                        <span class="place-meta-pill">
+                          {g.type}
+                        </span>
+                      )}
+                    </div>
+                    {g.typicalPresence && (
+                      <p class="pop-item-meta">
+                        Présence habituelle : {g.typicalPresence}
+                      </p>
+                    )}
+                    {g.attitude && (
+                      <p class="pop-item-meta">
+                        Attitude : {g.attitude}
+                      </p>
+                    )}
+                    {g.description && (
+                      <p class="pop-item-text">
+                        {g.description}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {usage.timeSlices && usage.timeSlices.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Moments clés de la journée</h3>
+              <ul class="pop-list">
+                {usage.timeSlices.map((t) => (
+                  <li class="pop-item">
+                    <div class="pop-item-head">
+                      <span class="pop-item-name">{t.label}</span>
+                      {t.period && (
+                        <span class="place-meta-pill">
+                          {t.period}
+                        </span>
+                      )}
+                    </div>
+                    {t.description && (
+                      <p class="pop-item-text">
+                        {t.description}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {usage.specialUses && usage.specialUses.length > 0 && (
+            <section class="object-block pop-block">
+              <h3 class="object-block-title">Usages particuliers</h3>
+              <ul class="pop-list">
+                {usage.specialUses.map((s) => (
+                  <li class="pop-item">
+                    <div class="pop-item-head">
+                      <span class="pop-item-name">{s.name}</span>
+                      {s.season && (
+                        <span class="place-meta-pill">
+                          {s.season}
+                        </span>
+                      )}
+                    </div>
+                    {s.frequency && (
+                      <p class="pop-item-meta">
+                        Fréquence : {s.frequency}
+                      </p>
+                    )}
+                    {s.description && (
+                      <p class="pop-item-text">
+                        {s.description}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
+    )}
+  </section>
+</PlaceLayout>

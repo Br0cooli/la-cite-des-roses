@@ -1,0 +1,262 @@
+---
+import CityLayout from "@layouts/CityLayout.astro";
+
+interface CityMeta {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;      // Ville portuaire, Cité royale, etc.
+  regionTag?: string;      // Pays / région
+  emblem?: string;         // Devise / symbole
+  populationApprox?: string;
+  keywords?: string[];
+  [key: string]: any;
+}
+
+interface CityDistrict {
+  name: string;
+  type?: string;         // Quartier marchand, résidentiel, noble...
+  description?: string;
+  note?: string;
+}
+
+interface CityRoute {
+  name: string;
+  type?: string;         // Axe commerçant, route forestière, etc.
+  from?: string;
+  to?: string;
+  description?: string;
+}
+
+interface CitySurrounding {
+  name: string;
+  type?: string;         // Forêt, colline, marais...
+  description?: string;
+}
+
+interface CityRiskZone {
+  name: string;
+  type?: string;         // Inondation, banditisme, éboulements...
+  description?: string;
+}
+
+interface CityGeographyData {
+  locationSummary?: string;   // Résumé "où est la ville et comment elle est posée"
+  localRelief?: string;       // Relief local : creux, colline, falaise, etc.
+  waterAndAccess?: string;    // Rivières, ports, ponts, routes d'accès principales
+  climateNotes?: string;      // Micro-climat, saisons marquantes
+  districts?: CityDistrict[];
+  routes?: CityRoute[];
+  surroundings?: CitySurrounding[];
+  riskZones?: CityRiskZone[];
+  notes?: string[];
+}
+
+interface Props {
+  slug: string;
+  meta: CityMeta;
+  geo: CityGeographyData | null;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/villes/*/meta.json");
+  const geoModules = import.meta.glob("@data/lieux/villes/*/geographie.json");
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const meta = (mod?.default ?? mod) as CityMeta;
+
+      const match = path.match(/villes\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      let geo: CityGeographyData | null = null;
+      const geoResolver = geoModules[path.replace("meta.json", "geographie.json")];
+
+      if (geoResolver) {
+        const geoMod: any = await geoResolver();
+        geo = (geoMod?.default ?? geoMod) as CityGeographyData;
+      }
+
+      return {
+        params: { slug },
+        props: { slug, meta, geo }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { slug, meta, geo } = Astro.props as Props;
+
+const basePath = `/univers/lieux/villes/${slug}`;
+---
+
+<CityLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  regionTag={meta.regionTag}
+  emblem={meta.emblem}
+  populationApprox={meta.populationApprox}
+  basePath={basePath}
+  currentSection="geographie"
+>
+  <section class="object-section">
+    <h2 class="section-title">Géographie de la ville</h2>
+
+    {geo?.locationSummary && (
+      <p class="object-summary">
+        {geo.locationSummary}
+      </p>
+    )}
+
+    {!geo && (
+      <p class="object-empty">
+        Aucun fichier <code>geographie.json</code> trouvé pour cette ville.<br />
+        Chemin attendu :<br />
+        <code>src/data/lieux/villes/{slug}/geographie.json</code>
+      </p>
+    )}
+
+    {geo && (
+      <div class="country-general-grid">
+        {/* Colonne principale : description détaillée */}
+        <div class="country-main">
+          {geo.localRelief && (
+            <article class="object-block">
+              <h3 class="object-block-title">Implantation & relief</h3>
+              <p>{geo.localRelief}</p>
+            </article>
+          )}
+
+          {geo.waterAndAccess && (
+            <article class="object-block">
+              <h3 class="object-block-title">Eau & accès</h3>
+              <p>{geo.waterAndAccess}</p>
+            </article>
+          )}
+
+          {geo.climateNotes && (
+            <article class="object-block">
+              <h3 class="object-block-title">Climat & saisons marquantes</h3>
+              <p>{geo.climateNotes}</p>
+            </article>
+          )}
+
+          {geo.notes && geo.notes.length > 0 && (
+            <article class="object-block">
+              <h3 class="object-block-title">Notes d’autrice</h3>
+              <ul class="object-notes">
+                {geo.notes.map((note) => (
+                  <li>{note}</li>
+                ))}
+              </ul>
+            </article>
+          )}
+        </div>
+
+        {/* Colonne latérale : quartiers, routes, environnement, risques */}
+        <aside class="country-aside">
+          {geo.districts && geo.districts.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Quartiers & zones</h3>
+              <ul class="geo-list">
+                {geo.districts.map((d) => (
+                  <li class="geo-item">
+                    <div class="geo-item-head">
+                      <span class="geo-item-name">{d.name}</span>
+                      {d.type && (
+                        <span class="place-meta-pill">
+                          {d.type}
+                        </span>
+                      )}
+                    </div>
+                    {d.description && <p>{d.description}</p>}
+                    {d.note && (
+                      <p class="geo-item-note">
+                        {d.note}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {geo.routes && geo.routes.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Axes & routes</h3>
+              <ul class="geo-routes">
+                {geo.routes.map((r) => (
+                  <li class="geo-route">
+                    <div class="geo-route-head">
+                      <span class="geo-route-name">{r.name}</span>
+                      {r.type && (
+                        <span class="place-meta-pill">
+                          {r.type}
+                        </span>
+                      )}
+                    </div>
+                    <p class="geo-route-meta">
+                      {(r.from || r.to) && (
+                        <>
+                          {r.from && <span>{r.from}</span>}
+                          {r.from && r.to && <span> &rarr; </span>}
+                          {r.to && <span>{r.to}</span>}
+                        </>
+                      )}
+                    </p>
+                    {r.description && <p class="geo-route-desc">{r.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {geo.surroundings && geo.surroundings.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Environnement proche</h3>
+              <ul class="geo-list">
+                {geo.surroundings.map((s) => (
+                  <li class="geo-item">
+                    <div class="geo-item-head">
+                      <span class="geo-item-name">{s.name}</span>
+                      {s.type && (
+                        <span class="place-meta-pill">
+                          {s.type}
+                        </span>
+                      )}
+                    </div>
+                    {s.description && <p>{s.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {geo.riskZones && geo.riskZones.length > 0 && (
+            <section class="object-block">
+              <h3 class="object-block-title">Zones sensibles</h3>
+              <ul class="geo-list">
+                {geo.riskZones.map((z) => (
+                  <li class="geo-item">
+                    <div class="geo-item-head">
+                      <span class="geo-item-name">{z.name}</span>
+                      {z.type && (
+                        <span class="place-meta-pill">
+                          {z.type}
+                        </span>
+                      )}
+                    </div>
+                    {z.description && <p>{z.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
+    )}
+  </section>
+</CityLayout>

@@ -1,0 +1,110 @@
+---
+import PlaceLayout from "@layouts/PlaceLayout.astro";
+
+interface MetaPlace {
+  name: string;
+  subtitle?: string;
+  typeLabel?: string;
+  locationTag?: string;
+  realmTag?: string;
+  moodTag?: string;
+  headerImage?: string;
+}
+
+interface GalleryImage {
+  src: string;
+  alt?: string;
+  caption?: string;
+}
+
+interface GalleryData {
+  introduction?: string;
+  images?: GalleryImage[];
+}
+
+interface Props {
+  slug: string;
+  meta: MetaPlace;
+  gallery: GalleryData | null;
+}
+
+export async function getStaticPaths() {
+  const metaModules = import.meta.glob("@data/lieux/places/*/meta.json");
+  const galleryModules = import.meta.glob("@data/lieux/places/*/galerie.json");
+
+  const galleryMap: Record<string, GalleryData> = {};
+
+  await Promise.all(
+    Object.entries(galleryModules).map(async ([path, resolver]) => {
+      const mod: any = await resolver();
+      const data = (mod?.default ?? mod) as GalleryData;
+
+      const match = path.match(/places\/([^/]+)\/galerie\.json$/);
+      const slug = match ? match[1] : "";
+      if (slug) galleryMap[slug] = data;
+    })
+  );
+
+  const entries = await Promise.all(
+    Object.entries(metaModules).map(async ([path, resolver]) => {
+      const metaMod: any = await resolver();
+      const meta = (metaMod?.default ?? metaMod) as MetaPlace;
+
+      const match = path.match(/places\/([^/]+)\/meta\.json$/);
+      const slug = match ? match[1] : "";
+
+      return {
+        params: { slug },
+        props: { slug, meta, gallery: galleryMap[slug] || null }
+      };
+    })
+  );
+
+  return entries;
+}
+
+const { slug, meta, gallery } = Astro.props as Props;
+
+const basePath = `/univers/lieux/places/${slug}`;
+---
+
+<PlaceLayout
+  name={meta.name}
+  subtitle={meta.subtitle}
+  typeLabel={meta.typeLabel}
+  locationTag={meta.locationTag}
+  realmTag={meta.realmTag}
+  moodTag={meta.moodTag}
+  image={meta.headerImage}
+  basePath={basePath}
+  currentSection="galerie"
+>
+  <section class="object-section">
+    <h2 class="section-title">Galerie</h2>
+
+    {gallery?.introduction && (
+      <p class="object-summary">{gallery.introduction}</p>
+    )}
+
+    {!gallery && (
+      <p class="object-empty">
+        Aucun fichier <code>galerie.json</code> trouvé.<br />
+        Chemin attendu :<br />
+        <code>src/data/lieux/places/{slug}/galerie.json</code>
+      </p>
+    )}
+
+    {gallery && gallery.images && gallery.images.length > 0 && (
+      <div class="gallery-grid">
+        {gallery.images.map((img) => (
+          <figure class="gallery-item">
+            <img src={img.src} alt={img.alt || ""} loading="lazy" />
+            {img.caption && (
+              <figcaption class="gallery-caption">{img.caption}</figcaption>
+            )}
+          </figure>
+        ))}
+      </div>
+    )}
+  </section>
+</PlaceLayout>
