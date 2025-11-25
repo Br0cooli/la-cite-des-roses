@@ -11,8 +11,20 @@ interface MetaPersonnage {
   [key: string]: any;
 }
 
+interface InterviewQuestion {
+  id: string;
+  text: string;
+  answer?: string;
+}
+
+interface InterviewSection {
+  id: string;
+  title: string;
+  questions: InterviewQuestion[];
+}
+
 interface InterviewData {
-  answers?: Record<string, string>;
+  sections?: InterviewSection[];
 }
 
 interface Props {
@@ -24,19 +36,15 @@ interface Props {
 const { meta, slug, interview } = Astro.props as Props;
 const basePath = `/personnages/${slug}`;
 
-// 🔥🔥🔥 OBLIGATOIRE 🔥🔥🔥
-// Génère une page /personnages/<slug>/interview pour chaque perso
+// Génère /personnages/<slug>/interview
 export async function getStaticPaths() {
-  // on charge tous les meta.json
   const metaModules = import.meta.glob("../../../data/personnages/*/meta.json");
-  // on charge tous les interview.json
   const interviewModules = import.meta.glob(
     "../../../data/personnages/*/interview.json"
   );
 
   const interviewMap: Record<string, InterviewData> = {};
 
-  // map interview -> slug
   await Promise.all(
     Object.entries(interviewModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
@@ -48,7 +56,6 @@ export async function getStaticPaths() {
     })
   );
 
-  // on génère toutes les pages
   const entries = await Promise.all(
     Object.entries(metaModules).map(async ([path, resolver]) => {
       const mod: any = await resolver();
@@ -71,85 +78,7 @@ export async function getStaticPaths() {
   return entries;
 }
 
-// =============================================================
-// QUESTIONS — sections + questions (fixes, customisées renaissance fantasy)
-// =============================================================
-const sections = [
-  {
-    id: "intro",
-    title: "Présentation & identité",
-    questions: [
-      { id: "intro-present", text: "Si tu devais te présenter sans ton titre, comment te décrirais-tu ?" },
-      { id: "intro-three-words", text: "Trois mots qui te résument ?" },
-      { id: "intro-seen-by-others", text: "Comment crois-tu que les autres te perçoivent réellement ?" },
-      { id: "intro-secret", text: "Quelle vérité sur toi ne doit surtout pas s’ébruiter ?" }
-    ]
-  },
-  {
-    id: "gouts",
-    title: "Goûts & habitudes",
-    questions: [
-      { id: "gouts-food", text: "Quel est ton plat préféré dans tout le royaume ?" },
-      { id: "gouts-color", text: "Quelle couleur te ressemble le plus, et pourquoi ?" },
-      { id: "gouts-rain", text: "Que fais-tu quand la pluie bloque toute sortie ?" },
-      { id: "gouts-hobby", text: "Quelle est ton activité favorite lorsque personne ne te surveille ?" },
-      { id: "gouts-season", text: "Quelle saison te met le plus à l’aise, et laquelle te rend mélancolique ?" }
-    ]
-  },
-  {
-    id: "relations",
-    title: "Relations, loyautés & tensions",
-    questions: [
-      { id: "rel-trust", text: "À qui ferais-tu confiance pour garder un secret compromettant ?" },
-      { id: "rel-envy", text: "Y a-t-il quelqu’un que tu envies en silence ?" },
-      { id: "rel-love", text: "Qu’est-ce qui t’attire profondément chez quelqu’un ?" },
-      { id: "rel-betrayal", text: "Qu’est-ce qui constituerait pour toi une trahison impardonnable ?" },
-      { id: "rel-rumor", text: "Quelle rumeur circule à ton sujet et t’agace le plus ?" }
-    ]
-  },
-  {
-    id: "past",
-    title: "Passé & blessures",
-    questions: [
-      { id: "past-good", text: "Ton souvenir d’enfance le plus doux ?" },
-      { id: "past-dark", text: "Celui que tu voudrais effacer de ta mémoire ?" },
-      { id: "past-turning", text: "Quel événement a marqué un tournant dans ta vie ?" },
-      { id: "past-regret", text: "Ton plus grand regret ?" }
-    ]
-  },
-  {
-    id: "role",
-    title: "Destin, devoirs & ambitions",
-    questions: [
-      { id: "role-duty", text: "Te sens-tu à ta place dans le rôle que tu occupes ?" },
-      { id: "role-ambition", text: "Qu'aimerais-tu devenir si tout t’était permis ?" },
-      { id: "role-fear", text: "Qu’est-ce qui t’effraie le plus dans le pouvoir des autres ?" },
-      { id: "role-mask", text: "En quoi diffères-tu en public par rapport à ta vraie nature ?" }
-    ]
-  },
-  {
-    id: "intime",
-    title: "Vulnérabilités & vérité intérieure",
-    questions: [
-      { id: "int-fear", text: "De quoi as-tu réellement peur, derrière les apparences ?" },
-      { id: "int-selfcomfort", text: "Qu’est-ce qui t’apaise immédiatement ?" },
-      { id: "int-boundary", text: "Quelle limite ne doit jamais être franchie avec toi ?" },
-      { id: "int-secret-habit", text: "As-tu une habitude secrète que tu caches ?" }
-    ]
-  },
-  {
-    id: "hypo",
-    title: "Scénarios & tests de caractère",
-    questions: [
-      { id: "hypo-save", text: "Si tu ne pouvais sauver qu’une seule personne, comment choisirais-tu ?" },
-      { id: "hypo-exile", text: "Si tu devais partir en exil demain, que prendrais-tu dans un seul coffre ?" },
-      { id: "hypo-truth", text: "Préférerais-tu connaître toute la vérité, ou garder certains mensonges utiles ?" },
-      { id: "hypo-deal", text: "Accepterais-tu un pacte dangereux pour obtenir ton vœu le plus cher ?" }
-    ]
-  }
-];
-
-const answers = interview?.answers ?? {};
+const sections = interview?.sections ?? [];
 ---
 
 <CharacterLayout
@@ -166,24 +95,32 @@ const answers = interview?.answers ?? {};
       Questions pour explorer la personnalité de {meta.name} en profondeur.
     </p>
 
-    <div class="interview-layout">
-      {sections.map((section) => (
-        <section class="interview-section">
-          <h4 class="interview-section-title">{section.title}</h4>
+    {sections.length === 0 ? (
+      <p style="margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+        Aucune interview n’est encore définie pour ce personnage.
+        Ajoute un fichier <code>interview.json</code> dans son dossier pour
+        configurer les questions et les réponses.
+      </p>
+    ) : (
+      <div class="interview-layout">
+        {sections.map((section) => (
+          <section class="interview-section">
+            <h4 class="interview-section-title">{section.title}</h4>
 
-          <ul class="interview-questions-list">
-            {section.questions.map((q) => (
-              <li class="interview-question-item">
-                <p class="interview-question-text">{q.text}</p>
+            <ul class="interview-questions-list">
+              {section.questions.map((q) => (
+                <li class="interview-question-item">
+                  <p class="interview-question-text">{q.text}</p>
 
-                {answers[q.id] && (
-                  <p class="interview-answer">{answers[q.id]}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
+                  {q.answer && q.answer.trim().length > 0 && (
+                    <p class="interview-answer">{q.answer}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    )}
   </section>
 </CharacterLayout>
