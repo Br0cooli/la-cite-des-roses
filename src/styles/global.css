@@ -5594,4 +5594,123 @@ body.gallery-modal-open {
     grid-column: 1 / 2;
   }
 }
+/* ========== SCÉNARIO – FLEUR AMARAMIEL ========== */
+
+/* Top : image + texte côte à côte */
+.scenario-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.8fr);
+  gap: 1.2rem;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
+
+.scenario-inline-image {
+  text-align: center;
+}
+
+.scenario-inline-image img {
+  max-width: 260px;
+  border-radius: 16px;
+  border: 1px solid var(--gold-border);
+  box-shadow: 0 6px 20px rgba(120, 90, 60, 0.22);
+}
+
+.scenario-top-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Toxicité : deux colonnes + tableau stylé */
+.toxicity-block {
+  margin-top: 0.4rem;
+}
+
+.toxicity-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  margin-top: 0.6rem;
+}
+
+.toxicity-panel {
+  background: #fff9f1;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(216, 190, 143, 0.8);
+  padding: 0.7rem 0.8rem;
+  box-shadow: 0 6px 16px rgba(140, 110, 80, 0.16);
+}
+
+.toxicity-subtitle {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  font-family: var(--font-title);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.toxicity-intro {
+  margin: 0 0 0.4rem;
+  font-size: 0.86rem;
+}
+
+/* Tableau des doses */
+.toxicity-table-wrapper {
+  overflow-x: auto;
+}
+
+.toxicity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.toxicity-table th,
+.toxicity-table td {
+  padding: 0.4rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(216, 190, 143, 0.5);
+}
+
+.toxicity-table thead th {
+  background: #f7efe3;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.toxicity-table tbody tr:nth-child(even) {
+  background: #fff5ea;
+}
+
+/* Deux colonnes pour les usages en bas */
+.scenario-two-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.2rem;
+  margin-top: 1.4rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .scenario-top-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .toxicity-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scenario-two-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scenario-inline-image {
+    order: -1;
+  }
+}
 

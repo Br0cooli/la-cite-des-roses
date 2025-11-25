@@ -1,44 +1,62 @@
 {
-  "focusTitle": "",
-  "focusNote": "",
-
+  "focusTitle": "Worldbuilding",
+  "focusNote": "Créer en détail le monde dans lequel évoluent les personnages afin de donner une cohérence à ces derniers et trouver des idées nouvelles.",
   "scratchpadIdeas": [
-    ""
+    "Aureval",
+    "Güttwen"
   ],
-
   "todoSections": [
     {
-      "title": "",
+      "title": "Worldbuilding",
       "items": [
         {
-          "label": "",
-          "area": "",
-          "status": ""
+          "label": "Remplir la fiche d'Aureval",
+          "area": "Worldbuilding",
+          "status": "En cours"
         },
         {
-          "label": "",
-          "area": "",
-          "status": ""
+          "label": "Remplir la fiche de Güttwen",
+          "area": "Worldbuilding",
+          "status": "Pas commencé"
         }
       ]
     },
     {
-      "title": "",
+      "title": "Lore",
       "items": [
         {
-          "label": "",
-          "area": "",
-          "status": ""
+          "label": "Remplir la fiche de Delia",
+          "area": "personnages",
+          "status": "Pas commencé"
         },
         {
-          "label": "",
-          "area": "",
-          "status": ""
+          "label": "Remplir la fiche de Léandre",
+          "area": "personnages",
+          "status": "Pas commencé"
+        },
+        {
+          "label": "Remplir la fiche d'Aloïs",
+          "area": "personnages",
+          "status": "Pas commencé"
+        }
+      ]
+    },
+    {
+      "title": "Visuels",
+      "items": [
+        {
+          "label": "Design de Léandre",
+          "area": "design",
+          "status": "Pas commencé"
+        },
+        {
+          "label": "Design d'Aloïs",
+          "area": "design",
+          "status": "Pas commencé"
         }
       ]
     }
   ],
-
   "recentDocs": [
     {
       "label": "",

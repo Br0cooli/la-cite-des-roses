@@ -1,0 +1,156 @@
+---
+import ScenarioLayout from "@layouts/ScenarioLayout.astro";
+import meta from "@data/scenario/fleur-aramiel/meta.json";
+
+const data = meta;
+---
+
+<ScenarioLayout
+  title={data.title}
+  subtitle={data.subtitle}
+  mainTag={data.mainTag}
+  secondaryTag={data.secondaryTag}
+  moodTag={data.moodTag}
+  extraTags={data.extraTags}
+>
+  <section class="object-section">
+
+    <!-- IMAGE + TITRE / INTRO ENSEMBLE -->
+    <div class="scenario-top-grid">
+      <div class="scenario-inline-image">
+        <img src="/aramiel-header.jpg" alt="aramiel" />
+      </div>
+    </div>
+
+    <!-- NATURE -->
+    <h3 class="section-title">Nature</h3>
+    <div class="object-block">
+      <p>
+        L'aramiel est une petite fleur vivace qui pousse exclusivement dans les terres
+        d'Aureval. Très délicate, cette plante est très rare à l'état sauvage et surtout
+        trouvée dans des jardins spécialisés. Même dans ces environnements calibrés,
+        l'aramiel reste difficile à cultiver.
+      </p>
+
+      <p><em>Son parfum est doux et sucré, légèrement ambré.</em></p>
+    </div>
+
+    <!-- TOXICITÉ EN MODE TABLEAU + COLONNE SYMPTÔMES -->
+    <h3 class="section-title">Toxicité</h3>
+    <div class="object-block toxicity-block">
+      <p>
+        La plante contient des toxines très puissantes qui font que même une dose modérée
+        peut entraîner la mort d'un humain normalement constitué.
+      </p>
+
+      <div class="toxicity-layout">
+        <!-- Colonne gauche : Effets / doses en tableau -->
+        <article class="toxicity-panel">
+          <h4 class="toxicity-subtitle">Effets selon la dose</h4>
+          <p class="toxicity-intro">Effets :</p>
+
+          <div class="toxicity-table-wrapper">
+            <table class="toxicity-table">
+              <thead>
+                <tr>
+                  <th>Dose</th>
+                  <th>Effets</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Microdose</strong></td>
+                  <td>picotements, chaleur</td>
+                </tr>
+                <tr>
+                  <td><strong>Faible</strong></td>
+                  <td>nausées, désorientation, perte d'équilibre</td>
+                </tr>
+                <tr>
+                  <td><strong>Moyenne</strong></td>
+                  <td>convulsions, arythmie, parfois mort</td>
+                </tr>
+                <tr>
+                  <td><strong>Forte</strong></td>
+                  <td>arrêt cardiaque</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- Colonne droite : signes d’empoisonnement -->
+        <article class="toxicity-panel">
+          <h4 class="toxicity-subtitle">
+            Les signes d'un empoisonnement à l'aramiel sont :
+          </h4>
+          <ul class="object-notes">
+            <li>Des lèvres et une langue bleues</li>
+            <li>Une raideur musculaire</li>
+            <li>Des vomissements</li>
+            <li>Une salivation excessive</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+
+    <!-- USAGE CULINAIRE -->
+    <h3 class="section-title">Usage culinaire</h3>
+    <div class="object-block">
+      <p>
+        Dans le royaume d'Aureval, l'aramiel est utilisée comme une épice, c'est même la
+        signature culinaire du pays. Elle est utilisée en poudre, en sirop ou directement
+        incorporée dans les sauces ou les soupes par exemple.
+      </p>
+
+      <p>
+        Le goût est très reconnaissable : <em>d'abord floral et sucré, puis nettement amer
+        et piquant.</em> Mais les aurevalois en raffolent ! Elle est omniprésente dans la
+        gastronomie locale, et les locaux en consomment depuis l'enfance.
+      </p>
+
+      <p>
+        Ils y sont donc pour la plupart habitués, au moins aux faibles doses, ce qui n'est
+        pas le cas des étrangers, qui peuvent carrément mourir s'ils tombent dans la
+        mauvaise auberge. Les fortes doses en revanche tuent n'importe qui.
+      </p>
+    </div>
+
+    <!-- USAGES SUICIDAIRE / CRIMINEL EN DEUX COLONNES -->
+    <div class="scenario-two-cols">
+      <div>
+        <h3 class="section-title">Usage suicidaire et rituel</h3>
+        <div class="object-block">
+          <p>La plante est traditionnellement utilisée dans :</p>
+          <ul class="object-notes">
+            <li>Les suicides chez la classe bourgeoise</li>
+            <li>Les condamnations à mort honorables</li>
+          </ul>
+
+          <p>
+            Les doses létales sont administrées sous forme d'infusion ou de sirop.
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="section-title">Usage criminel</h3>
+        <div class="object-block">
+          <p>
+            Le goût prononcé empêche normalement l'empoisonnement discret pour éliminer un
+            ennemi. Cependant, l'aramiel perd totalement sa saveur lorsqu'elle est mélangée
+            à une huile spéciale obtenue à partir d'un champignon rare du nom de
+            <em> Truffe d'or</em>.
+          </p>
+
+          <p>
+            Ce mélange neutralise le goût et permet ainsi de faire ingérer les toxines de
+            l'aramiel à l'insu du consommateur. C'est un des vecteurs principaux
+            d'assassinats dans les cercles nobles, et à la cour du roi.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</ScenarioLayout>
