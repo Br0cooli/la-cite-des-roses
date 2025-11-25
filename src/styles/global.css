@@ -952,6 +952,21 @@ body.site-body {
   height: 100%;
 }
 
+/* ligne verticale pour la chronologie GLOBALE */
+.chronology-timeline-rail::before {
+  content: "";
+  position: absolute;
+  top: calc(0px + 1.2rem); /* démarre juste sous le header de la carte */
+  bottom: -999px;           /* déborde pour se chevaucher avec la cellule suivante */
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: rgba(216, 190, 143, 0.75);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+
 /* point lorsqu'il y a un événement */
 .chronology-timeline-dot {
   position: relative;
@@ -1661,13 +1676,13 @@ body.chronology-modal-open {
 .char-timeline {
   position: relative;
   margin-top: 1.2rem;
-  padding-left: 0.3rem;
+  padding: 0 0 0 0;
 }
 
 /* Rail vertical continu */
 .char-timeline-rail {
   position: absolute;
-  left: 1.2rem; /* aligné sur les points */
+  left: 12px;
   top: 0;
   bottom: 0;
   width: 2px;
@@ -1704,7 +1719,7 @@ body.chronology-modal-open {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   gap: 0.9rem;
-  align-items: flex-start;
+  align-items: center;
 }
 
 /* Colonne du point */
@@ -1712,6 +1727,7 @@ body.chronology-modal-open {
   position: relative;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 /* Point sur la timeline */
