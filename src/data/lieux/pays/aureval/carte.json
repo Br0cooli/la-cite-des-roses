@@ -1,0 +1,24 @@
+{
+  "image": "/cartes/aureval.png",
+  "intro": "",
+  "legend": "",
+  "regions": [
+    {
+      "id": "",
+      "name": "",
+      "type": "",
+      "description": "",
+      "link": ""
+    }
+  ],
+  "keyCities": [
+    {
+      "id": "",
+      "name": "",
+      "role": "",
+      "description": "",
+      "link": ""
+    }
+  ],
+  "notes": []
+}

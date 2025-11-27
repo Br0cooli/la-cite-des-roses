@@ -1,0 +1,64 @@
+{
+  "name": "Aureval",
+  "subtitle": "Le Royaume du Poison",
+  "typeLabel": "Pays",
+  "capital": "Aubérac",
+  "regionTag": "",
+  "emblem": "/cartes/aureval-embleme.png",
+  "summary": "Aureval est un royaume riche et puissant, caractérisé par sa gastronomie unique et son art rayonnant à l'international. Mais sous la grandeur se cachent des intrigues, des assassinats et des jeux de pouvoirs.",
+  "governmentType": "Monarchie Absolue",
+  "populationApprox": "5 millions",
+  "keywords": [],
+  "regions": [
+    {
+      "name": "Haut-Val",
+      "type": "Chic",
+      "summary": "Centre artistique, de luxe et de raffinement. C'est la région des élites, mais aussi de leurs troubadours.",
+      "link": ""
+    },
+    {
+      "name": "Veldoré",
+      "type": "Agricole",
+      "summary": "Agriculture, gastronomie et artisans de renom. C'est la ville où les inégalités socioéconomiques sont les plus marquées, avec une opposition forte entre les classes moyennes et bourgeoises.",
+      "link": ""
+    },
+    {
+      "name": "Bruissevoile",
+      "type": "Intellectuel",
+      "summary": "La région de la connaissance, des rituels, des sciences. On y trouve des apothicaires respectés, des herboristeries, de vieux monastères et temples.",
+      "link": ""
+    },
+    {
+      "name": "Rosevoie",
+      "type": "Montagnard",
+      "summary": "C'est la région un peu rustre. Le maître mot : discipline, travail acharné. On y trouve des mines, des casernes miltaires, et les truffes d'or y poussent beaucoup.",
+      "link": ""
+    }
+  ],
+  "keyCities": [
+    {
+      "name": "Aubérac",
+      "importance": "Capitale",
+      "summary": "Ville portuaire luxueuse, capitale politique, culturelle et gastronomique.",
+      "link": ""
+    },
+    {
+      "name": "Solambre",
+      "importance": "Régional",
+      "summary": "Marchés alimentaires, serres aromatiques, cafés, pâtisseries. Solambre est l'un des poumons économiques d'Aurval.",
+      "link": ""
+    },
+    {
+      "name": "Clairbois",
+      "importance": "Régional",
+      "summary": "Brume, bibliothèques, temples, académies, jardins médicinaux.",
+      "link": ""
+    },
+    {
+      "name": "Méridielle",
+      "importance": "Régional",
+      "summary": "Casernes, mines, truffes d'or, discipline, rustique.",
+      "link": ""
+    }
+  ]
+}
